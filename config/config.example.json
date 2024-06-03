@@ -1,0 +1,40 @@
+{
+    "Server": {
+        "AllowedOrigins": [""],
+        "AppVersion": "",
+        "CookieName": "",
+        "CSRF": true,
+        "CtxDefaultTimeout": 0,
+        "Debug": true,
+        "Host": "",
+        "JwtSecretKey": "",
+        "Mode": "",
+        "Port": "",
+        "ReadTimeout": 0,
+        "SSL": true,
+        "WriteTimeout": 0
+    },
+    "Logger": {
+        "Development": true,
+        "Encoding": "json",
+        "Filepath": "",
+        "Level": "info"
+    },
+    "DB": {
+        "ConnMaxIddleTime": 0,
+        "ConnMaxLifetime": 0,
+        "Dbname": "",
+        "Driver": "",
+        "Host": "",
+        "MaxIddleConns": 0,
+        "MaxOpenConns": 0,
+        "Password": "",
+        "Port": "",
+        "SSLMode": "",
+        "User": "",
+        "EndpointID": ""
+    },
+    "RDB": {
+        "Url": ""
+    }
+}
