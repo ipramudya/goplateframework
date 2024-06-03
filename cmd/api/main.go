@@ -13,6 +13,7 @@ import (
 	"github.com/goplateframework/internal/server"
 	"github.com/goplateframework/pkg/db"
 	"github.com/goplateframework/pkg/logger"
+	"github.com/goplateframework/pkg/redisdb"
 )
 
 func main() {
@@ -48,10 +49,23 @@ func run(ctx context.Context, conf *config.Config, log *logger.Log) error {
 	db, err := db.Init(conf)
 	if err != nil {
 		log.Fatalf("database connection error, %v", err)
+		return err
 	} else {
 		log.Infof("database connected, status: %+v", db.Stats())
 	}
 	defer db.Close()
+
+	log.Info("initializing redis connection...")
+
+	// retrieve redis connection
+	rdb, err := redisdb.Init(conf)
+	if err != nil {
+		log.Fatalf("redis connection error, %v", err)
+		return err
+	} else {
+		log.Info("redis connected")
+	}
+	defer rdb.Close()
 
 	log.Infof("starting server on port: %s", conf.Server.Port)
 
@@ -62,6 +76,7 @@ func run(ctx context.Context, conf *config.Config, log *logger.Log) error {
 	// server configuration
 	serverConf := server.Config{
 		DB:       db,
+		RDB:      rdb,
 		Log:      log,
 		ServConf: conf,
 	}

@@ -2,7 +2,6 @@ package webcontext
 
 import (
 	"context"
-	"errors"
 
 	"github.com/goplateframework/internal/sdk/jsonwebtoken"
 )
@@ -10,8 +9,8 @@ import (
 type ContextKey string
 
 const (
-	claimsKey         ContextKey = "claims_key"
-	accountPayloadKey ContextKey = "account_payload_key"
+	claimsKey ContextKey = "claims_key"
+	tokenKey  ContextKey = "token_key"
 )
 
 func SetClaims(ctx context.Context, cl *jsonwebtoken.Claims) context.Context {
@@ -28,16 +27,16 @@ func GetClaims(ctx context.Context) *jsonwebtoken.Claims {
 	return val
 }
 
-func SetAccountPayload(ctx context.Context, p *jsonwebtoken.Payload) context.Context {
-	return context.WithValue(ctx, accountPayloadKey, p)
+func SetToken(ctx context.Context, token string) context.Context {
+	return context.WithValue(ctx, tokenKey, token)
 }
 
-func GetAccountPayload(ctx context.Context) (*jsonwebtoken.Payload, error) {
-	val, ok := ctx.Value(accountPayloadKey).(*jsonwebtoken.Payload)
+func GetToken(ctx context.Context) string {
+	val, ok := ctx.Value(tokenKey).(string)
 
 	if !ok {
-		return &jsonwebtoken.Payload{}, errors.New("user not found")
+		return ""
 	}
 
-	return val, nil
+	return val
 }

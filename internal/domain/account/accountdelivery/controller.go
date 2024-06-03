@@ -81,3 +81,12 @@ func (con *controller) changePassword(c echo.Context) error {
 
 	return c.NoContent(http.StatusAccepted)
 }
+
+func (con *controller) logout(c echo.Context) error {
+	err := con.accountUC.Logout(c.Request().Context())
+	if err != nil {
+		return c.JSON(err.(*errs.Error).HTTPStatus(), err)
+	}
+
+	return c.NoContent(http.StatusNoContent)
+}

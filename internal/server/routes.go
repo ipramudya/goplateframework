@@ -9,8 +9,9 @@ import (
 
 func routes(w *web.Web, conf *Config) {
 	// instantiate all domain use cases & repositories for cross requirements
-	accountRepo := accountrepo.New(conf.DB)
-	accountUC := accountuc.New(conf.ServConf, conf.Log, accountRepo)
+	accountDBRepo := accountrepo.NewDB(conf.DB)
+	accountCacheRepo := accountrepo.NewCache(conf.RDB)
+	accountUC := accountuc.New(conf.ServConf, conf.Log, accountDBRepo, accountCacheRepo)
 
 	// account domain delivery/endpoint
 	accountdelivery.Route(w, &accountdelivery.Options{

@@ -11,6 +11,7 @@ import (
 type Config struct {
 	Server ServerConfig
 	DB     PostgresConfig
+	RDB    RedisConfig
 	Logger Logger
 }
 
@@ -49,6 +50,10 @@ type PostgresConfig struct {
 	SSLMode          string
 	User             string
 	EndpointID       string
+}
+
+type RedisConfig struct {
+	Url string
 }
 
 func LoadConfig() (*viper.Viper, error) {

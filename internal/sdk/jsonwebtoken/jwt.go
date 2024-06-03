@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	ExpiredTime     = time.Now().Add(time.Minute * 60) // 60 min from now
+	ExpiredTime     = time.Now().Add(time.Minute * 10) // 60 min from now
 	Method          = jwt.GetSigningMethod(jwt.SigningMethodHS256.Name)
 	ErrInvalidToken = errors.New("invalid token")
 )
@@ -34,6 +34,7 @@ func Generate(conf *config.Config, payload Payload) (string, error) {
 			ExpiresAt: jwt.NewNumericDate(ExpiredTime),
 		},
 	}
+
 	token := jwt.NewWithClaims(Method, claims)
 	tokenString, err := token.SignedString([]byte(conf.Server.JwtSecretKey))
 	if err != nil {
@@ -42,17 +43,10 @@ func Generate(conf *config.Config, payload Payload) (string, error) {
 	return tokenString, nil
 }
 
-func Validate(conf *config.Config, authHeader string) (*Claims, error) {
-	parts := strings.Split(authHeader, " ")
-
-	if len(parts) != 2 || parts[0] != "Bearer" {
-		return &Claims{}, errors.New("expected authorization header format, \"Authorization: Bearer <token>\"")
-	}
-
-	// var claims Claims
+func Validate(conf *config.Config, bearerToken string) (*Claims, error) {
 	claims := new(Claims)
 
-	token, err := jwt.ParseWithClaims(parts[1], claims, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(bearerToken, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method, %v", token.Method)
 		}
@@ -68,4 +62,19 @@ func Validate(conf *config.Config, authHeader string) (*Claims, error) {
 	}
 
 	return claims, nil
+}
+
+func RemainingTime(claims *jwt.RegisteredClaims) time.Duration {
+	t := claims.ExpiresAt.Time
+	return time.Until(t)
+}
+
+func ExtractBearerToken(authHeader string) (string, error) {
+	parts := strings.Split(authHeader, " ")
+
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return "", errors.New("expected authorization header format, \"Authorization: Bearer <token>\"")
+	}
+
+	return parts[1], nil
 }

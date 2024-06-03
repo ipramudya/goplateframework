@@ -7,10 +7,12 @@ import (
 	"github.com/goplateframework/internal/web"
 	"github.com/goplateframework/pkg/logger"
 	"github.com/jmoiron/sqlx"
+	"github.com/redis/go-redis/v9"
 )
 
 type Config struct {
 	DB       *sqlx.DB
+	RDB      *redis.Client
 	Log      *logger.Log
 	ServConf *config.Config
 }
