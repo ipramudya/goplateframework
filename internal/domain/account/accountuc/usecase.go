@@ -7,7 +7,6 @@ import (
 	"github.com/goplateframework/config"
 	"github.com/goplateframework/internal/domain/account"
 	"github.com/goplateframework/internal/sdk/errs"
-	"github.com/goplateframework/internal/sdk/tokenutil"
 	"github.com/goplateframework/internal/web/webcontext"
 	"github.com/goplateframework/pkg/logger"
 	"golang.org/x/crypto/bcrypt"
@@ -27,19 +26,19 @@ func New(conf *config.Config, log *logger.Log, repo account.DBRepository) *Useca
 	}
 }
 
-func (uc *Usecase) Register(ctx context.Context, na *account.NewAccouuntDTO) (*account.AccountWithTokenDTO, error) {
+func (uc *Usecase) Register(ctx context.Context, na *account.NewAccouuntDTO) (*account.AccountDTO, error) {
 	existingAccount, err := uc.repoDB.GetOneByEmail(ctx, na.Email)
 	if existingAccount != nil && err == nil {
 		e := errs.Newf(errs.AlreadyExists, "email %s already exists", na.Email)
 		uc.log.Error(e.Debug())
-		return &account.AccountWithTokenDTO{}, e
+		return &account.AccountDTO{}, e
 	}
 
 	passHash, err := bcrypt.GenerateFromPassword([]byte(na.Password), bcrypt.DefaultCost)
 	if err != nil {
 		e := errs.Newf(errs.Internal, "failed to hash password: %v", err)
 		uc.log.Error(e.Debug())
-		return &account.AccountWithTokenDTO{}, e
+		return &account.AccountDTO{}, e
 	}
 	na.Password = string(passHash)
 
@@ -47,22 +46,10 @@ func (uc *Usecase) Register(ctx context.Context, na *account.NewAccouuntDTO) (*a
 	if err != nil {
 		e := errs.Newf(errs.Internal, "failed to create account: %v", err)
 		uc.log.Error(e.Debug())
-		return &account.AccountWithTokenDTO{}, e
+		return &account.AccountDTO{}, e
 	}
 
-	token, err := tokenutil.Generate(uc.conf, tokenutil.Payload{
-		Email:     accountCreated.Email,
-		AccountID: accountCreated.ID.String(),
-		Role:      accountCreated.Role,
-	})
-
-	if err != nil {
-		e := errs.Newf(errs.Internal, "failed to generate token: %v", err)
-		uc.log.Error(e.Debug())
-		return &account.AccountWithTokenDTO{}, e
-	}
-
-	return accountCreated.IntoAccountWithTokenDTO(token), nil
+	return accountCreated.IntoAccountDTO(), nil
 }
 
 func (uc *Usecase) ChangePassword(ctx context.Context, oldpass, newpass string) error {

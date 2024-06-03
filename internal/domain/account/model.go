@@ -29,10 +29,3 @@ func (s *Schema) IntoAccountDTO() *AccountDTO {
 		Role:      s.Role,
 	}
 }
-
-func (s *Schema) IntoAccountWithTokenDTO(token string) *AccountWithTokenDTO {
-	return &AccountWithTokenDTO{
-		Account: s.IntoAccountDTO(),
-		Token:   token,
-	}
-}

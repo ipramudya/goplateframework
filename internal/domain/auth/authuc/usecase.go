@@ -29,34 +29,37 @@ func New(conf *config.Config, log *logger.Log, cache auth.CacheRepository, repo 
 	}
 }
 
-func (uc *Usecase) Login(ctx context.Context, email, password string) (*account.AccountWithTokenDTO, error) {
-	existingAccount, err := uc.accountRepo.GetOneByEmail(ctx, email)
+func (uc *Usecase) Login(ctx context.Context, email, password string) (*auth.AccountWithTokenDTO, error) {
+	account, err := uc.accountRepo.GetOneByEmail(ctx, email)
 
 	if err != nil {
 		e := errs.Newf(errs.InvalidCredentials, "invalid email or password")
 		uc.log.Error(e.Debug())
-		return &account.AccountWithTokenDTO{}, e
+		return &auth.AccountWithTokenDTO{}, e
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(existingAccount.Password), []byte(password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(password)); err != nil {
 		e := errs.Newf(errs.InvalidCredentials, "invalid email or password")
 		uc.log.Error(e.Debug())
-		return &account.AccountWithTokenDTO{}, e
+		return &auth.AccountWithTokenDTO{}, e
 	}
 
 	token, err := tokenutil.Generate(uc.conf, tokenutil.Payload{
-		Email:     existingAccount.Email,
-		AccountID: existingAccount.ID.String(),
-		Role:      existingAccount.Role,
+		Email:     account.Email,
+		AccountID: account.ID.String(),
+		Role:      account.Role,
 	})
 
 	if err != nil {
 		e := errs.Newf(errs.Internal, "failed to generate token: %v", err)
 		uc.log.Error(e.Debug())
-		return &account.AccountWithTokenDTO{}, e
+		return &auth.AccountWithTokenDTO{}, e
 	}
 
-	return existingAccount.IntoAccountWithTokenDTO(token), nil
+	return &auth.AccountWithTokenDTO{
+		Account: account.IntoAccountDTO(),
+		Token:   token,
+	}, nil
 }
 
 func (uc *Usecase) Logout(ctx context.Context) error {
@@ -78,9 +81,7 @@ func (uc *Usecase) Logout(ctx context.Context) error {
 
 	remaining := tokenutil.RemainingTime(&claims.RegisteredClaims)
 
-	err := uc.cache.AddTokenToBlacklist(ctx, token, remaining)
-
-	if err != nil {
+	if err := uc.cache.AddTokenToBlacklist(ctx, token, remaining); err != nil {
 		e := errs.Newf(errs.Internal, "failed to add token to blacklist: %v", err)
 		uc.log.Error(e.Debug())
 		return e

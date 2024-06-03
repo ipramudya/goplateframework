@@ -16,11 +16,6 @@ type AccountDTO struct {
 	Role      string `json:"role"`
 }
 
-type AccountWithTokenDTO struct {
-	Token   string      `json:"token"`
-	Account *AccountDTO `json:"account"`
-}
-
 type NewAccouuntDTO struct {
 	Firstname string `json:"firstname"`
 	Lastname  string `json:"lastname"`

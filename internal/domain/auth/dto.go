@@ -3,8 +3,13 @@ package auth
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
+	"github.com/goplateframework/internal/domain/account"
 )
 
+type AccountWithTokenDTO struct {
+	Token   string              `json:"token"`
+	Account *account.AccountDTO `json:"account"`
+}
 type LoginDTO struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
