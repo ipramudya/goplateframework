@@ -1,0 +1,11 @@
+{
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[sql]": {
+        "editor.defaultFormatter": "inferrinizzard.prettier-sql-vscode",
+        "editor.formatOnSave": false,
+    },
+    "Prettier-SQL.tabulateAlias": false,
+    "Prettier-SQL.SQLFlavourOverride": "postgresql"
+}
