@@ -14,9 +14,7 @@ type controller struct {
 }
 
 func newController(accountUC *accountuc.Usecase) *controller {
-	return &controller{
-		accountUC: accountUC,
-	}
+	return &controller{accountUC}
 }
 
 func (con *controller) register(c echo.Context) (err error) {
@@ -40,27 +38,6 @@ func (con *controller) register(c echo.Context) (err error) {
 	return c.JSON(http.StatusCreated, account)
 }
 
-func (con *controller) login(c echo.Context) error {
-	dto := new(account.LoginDTO)
-
-	if err := c.Bind(dto); err != nil {
-		e := errs.Newf(errs.InvalidArgument, "invalid request: %v", err)
-		return c.JSON(e.HTTPStatus(), e)
-	}
-
-	if err := dto.Validate(); err != nil {
-		e := errs.Newf(errs.InvalidArgument, "invalid request: (%v)", err)
-		return c.JSON(e.HTTPStatus(), e)
-	}
-
-	account, err := con.accountUC.Login(c.Request().Context(), dto.Email, dto.Password)
-	if err != nil {
-		return c.JSON(err.(*errs.Error).HTTPStatus(), err)
-	}
-
-	return c.JSON(http.StatusOK, account)
-}
-
 func (con *controller) changePassword(c echo.Context) error {
 	dto := new(account.ChangePasswordDTO)
 
@@ -80,13 +57,4 @@ func (con *controller) changePassword(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusAccepted)
-}
-
-func (con *controller) logout(c echo.Context) error {
-	err := con.accountUC.Logout(c.Request().Context())
-	if err != nil {
-		return c.JSON(err.(*errs.Error).HTTPStatus(), err)
-	}
-
-	return c.NoContent(http.StatusNoContent)
 }

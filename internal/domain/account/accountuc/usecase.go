@@ -17,15 +17,13 @@ type Usecase struct {
 	conf   *config.Config
 	log    *logger.Log
 	repoDB account.DBRepository
-	cache  account.CacheRepository
 }
 
-func New(conf *config.Config, log *logger.Log, repo account.DBRepository, cache account.CacheRepository) *Usecase {
+func New(conf *config.Config, log *logger.Log, repo account.DBRepository) *Usecase {
 	return &Usecase{
 		conf:   conf,
 		log:    log,
 		repoDB: repo,
-		cache:  cache,
 	}
 }
 
@@ -67,36 +65,6 @@ func (uc *Usecase) Register(ctx context.Context, na *account.NewAccouuntDTO) (*a
 	return accountCreated.IntoAccountWithTokenDTO(token), nil
 }
 
-func (uc *Usecase) Login(ctx context.Context, email, password string) (*account.AccountWithTokenDTO, error) {
-	existingAccount, err := uc.repoDB.GetOneByEmail(ctx, email)
-
-	if err != nil {
-		e := errs.Newf(errs.InvalidCredentials, "invalid email or password")
-		uc.log.Error(e.Debug())
-		return &account.AccountWithTokenDTO{}, e
-	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(existingAccount.Password), []byte(password)); err != nil {
-		e := errs.Newf(errs.InvalidCredentials, "invalid email or password")
-		uc.log.Error(e.Debug())
-		return &account.AccountWithTokenDTO{}, e
-	}
-
-	token, err := tokenutil.Generate(uc.conf, tokenutil.Payload{
-		Email:     existingAccount.Email,
-		AccountID: existingAccount.ID.String(),
-		Role:      existingAccount.Role,
-	})
-
-	if err != nil {
-		e := errs.Newf(errs.Internal, "failed to generate token: %v", err)
-		uc.log.Error(e.Debug())
-		return &account.AccountWithTokenDTO{}, e
-	}
-
-	return existingAccount.IntoAccountWithTokenDTO(token), nil
-}
-
 func (uc *Usecase) ChangePassword(ctx context.Context, oldpass, newpass string) error {
 	claims := webcontext.GetClaims(ctx)
 
@@ -128,36 +96,6 @@ func (uc *Usecase) ChangePassword(ctx context.Context, oldpass, newpass string) 
 
 	if err := uc.repoDB.ChangePassword(ctx, account.Email, string(passHash)); err != nil {
 		e := errs.Newf(errs.Internal, "failed to change password: %v", err)
-		uc.log.Error(e.Debug())
-		return e
-	}
-
-	return nil
-}
-
-func (uc *Usecase) Logout(ctx context.Context) error {
-	token := webcontext.GetToken(ctx)
-
-	if token == "" {
-		e := errs.Newf(errs.Unauthenticated, "unauthenticated")
-		uc.log.Error(e.Debug())
-		return e
-	}
-
-	claims := webcontext.GetClaims(ctx)
-
-	if claims == nil {
-		e := errs.Newf(errs.Unauthenticated, "unauthenticated")
-		uc.log.Error(e.Debug())
-		return e
-	}
-
-	remaining := tokenutil.RemainingTime(&claims.RegisteredClaims)
-
-	err := uc.cache.AddTokenToBlacklist(ctx, token, remaining)
-
-	if err != nil {
-		e := errs.Newf(errs.Internal, "failed to add token to blacklist: %v", err)
 		uc.log.Error(e.Debug())
 		return e
 	}

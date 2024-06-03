@@ -40,19 +40,6 @@ func (na NewAccouuntDTO) Validate() error {
 	)
 }
 
-type LoginDTO struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-func (d LoginDTO) Validate() error {
-	return validation.ValidateStruct(
-		&d,
-		validation.Field(&d.Email, validation.Required, is.Email),
-		validation.Field(&d.Password, validation.Required),
-	)
-}
-
 type ChangePasswordDTO struct {
 	OldPassword string `json:"old_password"`
 	NewPassword string `json:"new_password"`

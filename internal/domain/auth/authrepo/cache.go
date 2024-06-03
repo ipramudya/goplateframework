@@ -1,4 +1,4 @@
-package accountrepo
+package authrepo
 
 import (
 	"context"
