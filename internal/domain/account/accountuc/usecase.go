@@ -7,7 +7,7 @@ import (
 	"github.com/goplateframework/config"
 	"github.com/goplateframework/internal/domain/account"
 	"github.com/goplateframework/internal/sdk/errs"
-	"github.com/goplateframework/internal/sdk/jsonwebtoken"
+	"github.com/goplateframework/internal/sdk/tokenutil"
 	"github.com/goplateframework/internal/web/webcontext"
 	"github.com/goplateframework/pkg/logger"
 	"golang.org/x/crypto/bcrypt"
@@ -52,7 +52,7 @@ func (uc *Usecase) Register(ctx context.Context, na *account.NewAccouuntDTO) (*a
 		return &account.AccountWithTokenDTO{}, e
 	}
 
-	token, err := jsonwebtoken.Generate(uc.conf, jsonwebtoken.Payload{
+	token, err := tokenutil.Generate(uc.conf, tokenutil.Payload{
 		Email:     accountCreated.Email,
 		AccountID: accountCreated.ID.String(),
 		Role:      accountCreated.Role,
@@ -82,7 +82,7 @@ func (uc *Usecase) Login(ctx context.Context, email, password string) (*account.
 		return &account.AccountWithTokenDTO{}, e
 	}
 
-	token, err := jsonwebtoken.Generate(uc.conf, jsonwebtoken.Payload{
+	token, err := tokenutil.Generate(uc.conf, tokenutil.Payload{
 		Email:     existingAccount.Email,
 		AccountID: existingAccount.ID.String(),
 		Role:      existingAccount.Role,
@@ -152,7 +152,7 @@ func (uc *Usecase) Logout(ctx context.Context) error {
 		return e
 	}
 
-	remaining := jsonwebtoken.RemainingTime(&claims.RegisteredClaims)
+	remaining := tokenutil.RemainingTime(&claims.RegisteredClaims)
 
 	err := uc.cache.AddTokenToBlacklist(ctx, token, remaining)
 

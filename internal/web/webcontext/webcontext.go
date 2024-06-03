@@ -3,7 +3,7 @@ package webcontext
 import (
 	"context"
 
-	"github.com/goplateframework/internal/sdk/jsonwebtoken"
+	"github.com/goplateframework/internal/sdk/tokenutil"
 )
 
 type ContextKey string
@@ -13,15 +13,15 @@ const (
 	tokenKey  ContextKey = "token_key"
 )
 
-func SetClaims(ctx context.Context, cl *jsonwebtoken.Claims) context.Context {
+func SetClaims(ctx context.Context, cl *tokenutil.Claims) context.Context {
 	return context.WithValue(ctx, claimsKey, cl)
 }
 
-func GetClaims(ctx context.Context) *jsonwebtoken.Claims {
-	val, ok := ctx.Value(claimsKey).(*jsonwebtoken.Claims)
+func GetClaims(ctx context.Context) *tokenutil.Claims {
+	val, ok := ctx.Value(claimsKey).(*tokenutil.Claims)
 
 	if !ok {
-		return &jsonwebtoken.Claims{}
+		return &tokenutil.Claims{}
 	}
 
 	return val

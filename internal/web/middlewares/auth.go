@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/goplateframework/internal/sdk/errs"
-	"github.com/goplateframework/internal/sdk/jsonwebtoken"
+	"github.com/goplateframework/internal/sdk/tokenutil"
 	"github.com/goplateframework/internal/web/webcontext"
 	"github.com/labstack/echo/v4"
 )
@@ -18,7 +18,7 @@ func (mid *Middleware) Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
 			return c.JSON(e.HTTPStatus(), e)
 		}
 
-		token, err := jsonwebtoken.ExtractBearerToken(authHeader)
+		token, err := tokenutil.ExtractBearerToken(authHeader)
 		if err != nil {
 			e := errs.Newf(errs.Unauthenticated, "unauthenticated: %v", err)
 			mid.log.Debug(e.Debug())
@@ -33,9 +33,9 @@ func (mid *Middleware) Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
 			return c.JSON(e.HTTPStatus(), e)
 		}
 
-		claims, err := jsonwebtoken.Validate(mid.conf, token)
+		claims, err := tokenutil.Validate(mid.conf, token)
 		if err != nil {
-			if errors.Is(err, jsonwebtoken.ErrInvalidToken) {
+			if errors.Is(err, tokenutil.ErrInvalidToken) {
 				e := errs.Newf(errs.Unauthenticated, "unauthenticated: %v", err)
 				mid.log.Debug(e.Debug())
 				return c.JSON(e.HTTPStatus(), e)
