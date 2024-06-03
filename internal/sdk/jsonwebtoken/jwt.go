@@ -42,16 +42,17 @@ func Generate(conf *config.Config, payload Payload) (string, error) {
 	return tokenString, nil
 }
 
-func Validate(conf *config.Config, authHeader string) (Claims, error) {
+func Validate(conf *config.Config, authHeader string) (*Claims, error) {
 	parts := strings.Split(authHeader, " ")
 
 	if len(parts) != 2 || parts[0] != "Bearer" {
-		return Claims{}, errors.New("expected authorization header format, \"Authorization: Bearer <token>\"")
+		return &Claims{}, errors.New("expected authorization header format, \"Authorization: Bearer <token>\"")
 	}
 
-	var claims Claims
+	// var claims Claims
+	claims := new(Claims)
 
-	token, err := jwt.ParseWithClaims(parts[1], &claims, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(parts[1], claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method, %v", token.Method)
 		}
@@ -59,11 +60,11 @@ func Validate(conf *config.Config, authHeader string) (Claims, error) {
 	})
 
 	if err != nil {
-		return Claims{}, fmt.Errorf("token signature is invalid")
+		return &Claims{}, fmt.Errorf("token signature is invalid")
 	}
 
 	if !token.Valid {
-		return Claims{}, ErrInvalidToken
+		return &Claims{}, ErrInvalidToken
 	}
 
 	return claims, nil

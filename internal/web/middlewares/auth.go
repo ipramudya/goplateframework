@@ -26,9 +26,9 @@ func (mid *Middleware) Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
 			return c.JSON(e.HTTPStatus(), e)
 		}
 
-		claimsCtx := webcontext.SetClaims(c.Request().Context(), claims)
-		accountPayloadCtx := webcontext.SetAccountPayload(claimsCtx, claims.Payload)
-		c.SetRequest(c.Request().WithContext(accountPayloadCtx))
+		ctx := webcontext.SetClaims(c.Request().Context(), claims)
+		ctx = webcontext.SetAccountPayload(ctx, &claims.Payload)
+		c.SetRequest(c.Request().WithContext(ctx))
 
 		return next(c)
 	}
