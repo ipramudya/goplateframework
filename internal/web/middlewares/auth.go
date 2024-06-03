@@ -25,6 +25,14 @@ func (mid *Middleware) Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
 			return c.JSON(e.HTTPStatus(), e)
 		}
 
+		// whenever token exist in blacklist, it will return error
+		val, _ := mid.cache.Get(c.Request().Context(), token).Result()
+		if val != "" {
+			e := errs.New(errs.Unauthenticated, errors.New("unauthenticated: expired token"))
+			mid.log.Debug(e.Debug())
+			return c.JSON(e.HTTPStatus(), e)
+		}
+
 		claims, err := jsonwebtoken.Validate(mid.conf, token)
 		if err != nil {
 			if errors.Is(err, jsonwebtoken.ErrInvalidToken) {

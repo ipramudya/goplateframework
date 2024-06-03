@@ -18,8 +18,3 @@ func NewCache(client *redis.Client) *Cache {
 func (c *Cache) AddTokenToBlacklist(ctx context.Context, token string, exp time.Duration) error {
 	return c.Set(ctx, token, token, exp).Err()
 }
-
-func (c *Cache) IsTokenInBlacklist(ctx context.Context, token string) bool {
-	val, _ := c.Get(ctx, token).Result()
-	return val == token
-}

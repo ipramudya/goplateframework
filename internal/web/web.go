@@ -8,6 +8,7 @@ import (
 	"github.com/goplateframework/pkg/logger"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/redis/go-redis/v9"
 )
 
 type Web struct {
@@ -27,8 +28,8 @@ func (w *Web) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	w.Echo.ServeHTTP(rw, r)
 }
 
-func (w *Web) InitCustomMware(servConf *config.Config) {
-	w.Mid = middlewares.New(servConf, w.log)
+func (w *Web) InitCustomMware(servConf *config.Config, cache *redis.Client) {
+	w.Mid = middlewares.New(servConf, w.log, cache)
 }
 
 func (w *Web) EnableCORSMware(origins []string) {

@@ -22,7 +22,7 @@ func Handler(conf *Config) http.Handler {
 	w := web.New(conf.Log)
 
 	// middleware setup
-	w.InitCustomMware(conf.ServConf)
+	w.InitCustomMware(conf.ServConf, conf.RDB)
 	w.EnableCORSMware(conf.ServConf.Server.AllowedOrigins)
 	w.EnableRecovererMware()
 	w.EnableGlobalMware()

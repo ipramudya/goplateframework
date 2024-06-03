@@ -13,5 +13,4 @@ type DBRepository interface {
 
 type CacheRepository interface {
 	AddTokenToBlacklist(ctx context.Context, token string, exp time.Duration) error
-	IsTokenInBlacklist(ctx context.Context, token string) bool
 }

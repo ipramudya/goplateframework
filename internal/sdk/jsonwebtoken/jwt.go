@@ -43,10 +43,10 @@ func Generate(conf *config.Config, payload Payload) (string, error) {
 	return tokenString, nil
 }
 
-func Validate(conf *config.Config, bearerToken string) (*Claims, error) {
+func Validate(conf *config.Config, requestToken string) (*Claims, error) {
 	claims := new(Claims)
 
-	token, err := jwt.ParseWithClaims(bearerToken, claims, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(requestToken, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method, %v", token.Method)
 		}
