@@ -42,7 +42,7 @@ func (w *Web) EnableCORSMware(origins []string) {
 			http.MethodDelete,
 			http.MethodOptions,
 		},
-		AllowHeaders:     []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowHeaders:     []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "RF-Token"},
 		ExposeHeaders:    []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300,

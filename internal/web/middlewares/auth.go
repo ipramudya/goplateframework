@@ -50,7 +50,7 @@ func (mid *Middleware) Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
 
 func (mid *Middleware) RefreshAuth(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		refreshToken := c.Request().Header.Get("RFTOKEN")
+		refreshToken := c.Request().Header.Get("RF-Token")
 		if refreshToken == "" {
 			e := errs.New(errs.Unauthenticated, errors.New("unauthenticated"))
 			mid.log.Debug(e.Debug())
