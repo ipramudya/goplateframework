@@ -80,7 +80,6 @@ func (uc *Usecase) Login(ctx context.Context, email, password string) (*auth.Acc
 			uc.wg.Done()
 			close(ch)
 		}()
-
 		rt, err := tokenutil.GenerateRefresh(uc.conf, tokenutil.RefreshTokenPayload{
 			AccountID: account.ID.String(),
 		})
