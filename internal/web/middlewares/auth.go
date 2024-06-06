@@ -57,16 +57,16 @@ func (mid *Middleware) RefreshAuth(next echo.HandlerFunc) echo.HandlerFunc {
 			return c.JSON(e.HTTPStatus(), e)
 		}
 
-		// whenever token exist in blacklist, it will return error
-		if val, _ := mid.cache.Get(c.Request().Context(), refreshToken).Result(); val != "" {
-			e := errs.New(errs.Unauthenticated, errors.New("unauthenticated: already logged out"))
+		claims, err := tokenutil.ValidateRefresh(mid.conf, refreshToken)
+		if err != nil {
+			e := errs.New(errs.Unauthenticated, errors.New("unauthenticated"))
 			mid.log.Debug(e.Debug())
 			return c.JSON(e.HTTPStatus(), e)
 		}
 
-		claims, err := tokenutil.ValidateRefresh(mid.conf, refreshToken)
-		if err != nil {
-			e := errs.New(errs.Unauthenticated, errors.New("unauthenticated"))
+		// whenever token exist in blacklist, it will return error
+		if val, _ := mid.cache.Get(c.Request().Context(), claims.AccountID).Result(); val != "" {
+			e := errs.New(errs.Unauthenticated, errors.New("unauthenticated: already logged out"))
 			mid.log.Debug(e.Debug())
 			return c.JSON(e.HTTPStatus(), e)
 		}
