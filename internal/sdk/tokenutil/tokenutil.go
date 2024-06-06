@@ -49,6 +49,7 @@ func GenerateAccess(conf *config.Config, payload AccessTokenPayload) (string, er
 		AccessTokenPayload: payload,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(AccessTokenExpiredTime),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
 
@@ -65,6 +66,7 @@ func GenerateRefresh(conf *config.Config, payload RefreshTokenPayload) (string, 
 		RefreshTokenPayload: payload,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(RefreshTokenExpiredTime),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
 
