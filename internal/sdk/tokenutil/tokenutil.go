@@ -10,58 +10,112 @@ import (
 	"github.com/goplateframework/config"
 )
 
-var (
-	ExpiredTime     = time.Now().Add(time.Minute * 10) // 60 min from now
-	Method          = jwt.GetSigningMethod(jwt.SigningMethodHS256.Name)
-	ErrInvalidToken = errors.New("invalid token")
+type TokenStrategy int
+
+const (
+	AccessTokenStrategy TokenStrategy = iota
+	RefreshTokenStrategy
 )
 
-type Payload struct {
+var (
+	AccessTokenExpiredTime  = time.Now().Add(time.Minute * 10) // 60 min from now
+	RefreshTokenExpiredTime = time.Now().AddDate(0, 0, 30)     // 30 days from now
+	Method                  = jwt.GetSigningMethod(jwt.SigningMethodHS256.Name)
+	ErrInvalidToken         = errors.New("invalid token")
+)
+
+type AccessTokenPayload struct {
 	Email     string `json:"email"`
-	AccountID string `json:"account_id"`
 	Role      string `json:"role"`
+	AccountID string `json:"account_id"`
 }
 
-type Claims struct {
+type RefreshTokenPayload struct {
+	AccountID string `json:"account_id"`
+}
+
+type AccessTokenClaims struct {
 	jwt.RegisteredClaims
-	Payload
+	AccessTokenPayload
 }
 
-func Generate(conf *config.Config, payload Payload) (string, error) {
-	claims := &Claims{
-		Payload: payload,
+type RefreshTokenClaims struct {
+	jwt.RegisteredClaims
+	RefreshTokenPayload
+}
+
+func GenerateAccess(conf *config.Config, payload AccessTokenPayload) (string, error) {
+	claims := &AccessTokenClaims{
+		AccessTokenPayload: payload,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(ExpiredTime),
+			ExpiresAt: jwt.NewNumericDate(AccessTokenExpiredTime),
 		},
 	}
 
 	token := jwt.NewWithClaims(Method, claims)
-	tokenString, err := token.SignedString([]byte(conf.Server.JwtSecretKey))
+	tokenString, err := token.SignedString([]byte(conf.Server.JWTAccessTokenSecret))
 	if err != nil {
 		return "", err
 	}
 	return tokenString, nil
 }
 
-func Validate(conf *config.Config, requestToken string) (*Claims, error) {
-	claims := new(Claims)
+func GenerateRefresh(conf *config.Config, payload RefreshTokenPayload) (string, error) {
+	claims := &RefreshTokenClaims{
+		RefreshTokenPayload: payload,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(RefreshTokenExpiredTime),
+		},
+	}
+
+	token := jwt.NewWithClaims(Method, claims)
+	tokenString, err := token.SignedString([]byte(conf.Server.JWTRefreshTokenSecret))
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
+}
+
+func ValidateAccess(conf *config.Config, requestToken string) (*AccessTokenClaims, error) {
+	claims := new(AccessTokenClaims)
 
 	token, err := jwt.ParseWithClaims(requestToken, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method, %v", token.Method)
 		}
-		return []byte(conf.Server.JwtSecretKey), nil
+		return []byte(conf.Server.JWTAccessTokenSecret), nil
 	})
 
 	if err != nil {
-		return &Claims{}, fmt.Errorf("token signature is invalid")
+		return &AccessTokenClaims{}, fmt.Errorf("token signature is invalid")
 	}
 
 	if !token.Valid {
-		return &Claims{}, ErrInvalidToken
+		return &AccessTokenClaims{}, ErrInvalidToken
 	}
 
 	return claims, nil
+}
+
+func ValidateRefresh(conf *config.Config, requestToken string) error {
+	claims := new(RefreshTokenClaims)
+
+	token, err := jwt.ParseWithClaims(requestToken, claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method, %v", token.Method)
+		}
+		return []byte(conf.Server.JWTRefreshTokenSecret), nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("token signature is invalid")
+	}
+
+	if !token.Valid {
+		return ErrInvalidToken
+	}
+
+	return nil
 }
 
 func RemainingTime(claims *jwt.RegisteredClaims) time.Duration {

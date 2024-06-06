@@ -7,8 +7,9 @@ import (
 )
 
 type AccountWithTokenDTO struct {
-	Token   string              `json:"token"`
-	Account *account.AccountDTO `json:"account"`
+	AccessToken  string              `json:"access_token"`
+	RefreshToken string              `json:"refresh_token"`
+	Account      *account.AccountDTO `json:"account"`
 }
 type LoginDTO struct {
 	Email    string `json:"email"`

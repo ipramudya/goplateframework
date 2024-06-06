@@ -13,15 +13,15 @@ const (
 	tokenKey  ContextKey = "token_key"
 )
 
-func SetClaims(ctx context.Context, cl *tokenutil.Claims) context.Context {
+func SetClaims(ctx context.Context, cl *tokenutil.AccessTokenClaims) context.Context {
 	return context.WithValue(ctx, claimsKey, cl)
 }
 
-func GetClaims(ctx context.Context) *tokenutil.Claims {
-	val, ok := ctx.Value(claimsKey).(*tokenutil.Claims)
+func GetClaims(ctx context.Context) *tokenutil.AccessTokenClaims {
+	val, ok := ctx.Value(claimsKey).(*tokenutil.AccessTokenClaims)
 
 	if !ok {
-		return &tokenutil.Claims{}
+		return &tokenutil.AccessTokenClaims{}
 	}
 
 	return val

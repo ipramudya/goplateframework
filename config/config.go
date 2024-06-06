@@ -16,18 +16,19 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	AllowedOrigins    []string
-	AppVersion        string
-	CookieName        string
-	CSRF              bool
-	CtxDefaultTimeout time.Duration
-	Debug             bool
-	Host              string
-	JwtSecretKey      string
-	Mode              string
-	Port              string
-	ReadTimeout       time.Duration
-	WriteTimeout      time.Duration
+	AllowedOrigins        []string
+	AppVersion            string
+	CookieName            string
+	CSRF                  bool
+	CtxDefaultTimeout     time.Duration
+	Debug                 bool
+	Host                  string
+	JWTRefreshTokenSecret string
+	JWTAccessTokenSecret  string
+	Mode                  string
+	Port                  string
+	ReadTimeout           time.Duration
+	WriteTimeout          time.Duration
 }
 
 type Logger struct {

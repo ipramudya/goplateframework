@@ -15,6 +15,6 @@ func NewCache(client *redis.Client) *Cache {
 	return &Cache{client}
 }
 
-func (c *Cache) AddTokenToBlacklist(ctx context.Context, token string, exp time.Duration) error {
-	return c.Set(ctx, token, token, exp).Err()
+func (c *Cache) AddAccessTokenToBlacklist(ctx context.Context, accountID, token string, exp time.Duration) error {
+	return c.Set(ctx, accountID, token, exp).Err()
 }
