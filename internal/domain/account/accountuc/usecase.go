@@ -53,7 +53,7 @@ func (uc *Usecase) Register(ctx context.Context, na *account.NewAccouuntDTO) (*a
 }
 
 func (uc *Usecase) ChangePassword(ctx context.Context, oldpass, newpass string) error {
-	claims := webcontext.GetClaims(ctx)
+	claims := webcontext.GetAccessTokenClaims(ctx)
 
 	if claims == nil {
 		e := errs.New(errs.Unauthenticated, errors.New("unauthenticated"))

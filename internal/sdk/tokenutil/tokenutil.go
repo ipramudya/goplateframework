@@ -97,7 +97,7 @@ func ValidateAccess(conf *config.Config, requestToken string) (*AccessTokenClaim
 	return claims, nil
 }
 
-func ValidateRefresh(conf *config.Config, requestToken string) error {
+func ValidateRefresh(conf *config.Config, requestToken string) (*RefreshTokenClaims, error) {
 	claims := new(RefreshTokenClaims)
 
 	token, err := jwt.ParseWithClaims(requestToken, claims, func(token *jwt.Token) (interface{}, error) {
@@ -108,14 +108,14 @@ func ValidateRefresh(conf *config.Config, requestToken string) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("token signature is invalid")
+		return &RefreshTokenClaims{}, fmt.Errorf("token signature is invalid")
 	}
 
 	if !token.Valid {
-		return ErrInvalidToken
+		return &RefreshTokenClaims{}, ErrInvalidToken
 	}
 
-	return nil
+	return claims, nil
 }
 
 func RemainingTime(claims *jwt.RegisteredClaims) time.Duration {

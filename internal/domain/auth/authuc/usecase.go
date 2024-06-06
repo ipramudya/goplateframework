@@ -47,11 +47,14 @@ func (uc *Usecase) Login(ctx context.Context, email, password string) (*auth.Acc
 		return &auth.AccountWithTokenDTO{}, e
 	}
 
-	token := make(chan *string, 2)
+	atCh, rtCh := make(chan *string, 1), make(chan *string, 1) //access token channel & refresh token channel
 	uc.wg.Add(2)
 
-	go func(t chan *string) {
-		defer uc.wg.Done()
+	go func(ch chan *string) {
+		defer func() {
+			uc.wg.Done()
+			close(ch)
+		}()
 		at, err := tokenutil.GenerateAccess(uc.conf, tokenutil.AccessTokenPayload{
 			AccountID: account.ID.String(),
 			Email:     account.Email,
@@ -60,30 +63,32 @@ func (uc *Usecase) Login(ctx context.Context, email, password string) (*auth.Acc
 		if err != nil {
 			e := errs.Newf(errs.Internal, "failed to generate access_token: %v", err)
 			uc.log.Error(e.Debug())
-			t <- nil // store nil pointer to channel
+			ch <- nil // store nil pointer to channel
 			return
 		}
-		t <- &at
-	}(token)
+		ch <- &at
+	}(atCh)
 
-	go func(t chan *string) {
-		defer uc.wg.Done()
+	go func(ch chan *string) {
+		defer func() {
+			uc.wg.Done()
+			close(ch)
+		}()
+
 		rt, err := tokenutil.GenerateRefresh(uc.conf, tokenutil.RefreshTokenPayload{
 			AccountID: account.ID.String(),
 		})
 		if err != nil {
 			e := errs.Newf(errs.Internal, "failed to generate refresh_token: %v", err)
 			uc.log.Error(e.Debug())
-			t <- nil // store nil pointer to channel
+			ch <- nil // store nil pointer to channel
 			return
 		}
-		t <- &rt
-	}(token)
+		ch <- &rt
+	}(rtCh)
 
 	uc.wg.Wait()
-	at := <-token // access token
-	rt := <-token // refresh token
-	close(token)
+	at, rt := <-atCh, <-rtCh
 
 	if at == nil || rt == nil {
 		e := errs.Newf(errs.Internal, "failed to generate token")
@@ -98,27 +103,55 @@ func (uc *Usecase) Login(ctx context.Context, email, password string) (*auth.Acc
 }
 
 func (uc *Usecase) Logout(ctx context.Context) error {
-	token := webcontext.GetToken(ctx)
+	at := webcontext.GetAccessToken(ctx)
+	rt := webcontext.GetRefreshToken(ctx)
 
-	if token == "" {
+	if at == "" || rt == "" {
 		e := errs.Newf(errs.Unauthenticated, "unauthenticated")
 		uc.log.Error(e.Debug())
 		return e
 	}
 
-	claims := webcontext.GetClaims(ctx)
+	atClaims := webcontext.GetAccessTokenClaims(ctx)
+	rtClaims := webcontext.GetRefreshTokenClaims(ctx)
 
-	if claims == nil {
+	if atClaims == nil || rtClaims == nil {
 		e := errs.Newf(errs.Unauthenticated, "unauthenticated")
 		uc.log.Error(e.Debug())
 		return e
 	}
 
-	remaining := tokenutil.RemainingTime(&claims.RegisteredClaims)
+	atRemaining := tokenutil.RemainingTime(&atClaims.RegisteredClaims)
+	rtRemaining := tokenutil.RemainingTime(&rtClaims.RegisteredClaims)
 
-	if err := uc.cache.AddAccessTokenToBlacklist(ctx, claims.AccountID, token, remaining); err != nil {
-		e := errs.Newf(errs.Internal, "failed to add token to blacklist: %v", err)
-		uc.log.Error(e.Debug())
+	chanErrs := make(chan error, 2)
+	uc.wg.Add(2)
+
+	go func(e chan error) {
+		defer uc.wg.Done()
+		if err := uc.cache.AddTokenToBlacklist(ctx, at, atRemaining); err != nil {
+			e := errs.Newf(errs.Internal, "failed to add access token to blacklist: %v", err)
+			uc.log.Error(e.Debug())
+			chanErrs <- e
+		}
+		chanErrs <- nil
+	}(chanErrs)
+
+	go func(e chan error) {
+		defer uc.wg.Done()
+		if err := uc.cache.AddTokenToBlacklist(ctx, rt, rtRemaining); err != nil {
+			e := errs.Newf(errs.Internal, "failed to add refresh token to blacklist: %v", err)
+			uc.log.Error(e.Debug())
+			chanErrs <- e
+		}
+		chanErrs <- nil
+	}(chanErrs)
+
+	uc.wg.Wait()
+	e := <-chanErrs
+	close(chanErrs)
+
+	if e != nil {
 		return e
 	}
 

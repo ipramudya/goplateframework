@@ -6,5 +6,5 @@ import (
 )
 
 type CacheRepository interface {
-	AddAccessTokenToBlacklist(ctx context.Context, accountID, token string, exp time.Duration) error
+	AddTokenToBlacklist(ctx context.Context, token string, exp time.Duration) error
 }
