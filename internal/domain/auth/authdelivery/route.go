@@ -12,7 +12,7 @@ type Options struct {
 }
 
 func Route(web *web.Web, opts *Options) {
-	con := newController(opts.AuthUC)
+	con := newController(opts.AuthUC, opts.Log)
 
 	g := web.Echo.Group("/api/v1/auth")
 	g.POST("/login", con.login)

@@ -16,13 +16,9 @@ func NewDB(db *sqlx.DB) *repository {
 }
 
 func (repo repository) GetOneByEmail(ctx context.Context, email string) (*account.Schema, error) {
-	account := &account.Schema{}
+	account := new(account.Schema)
 
-	err := repo.
-		QueryRowxContext(ctx, GetOneByEmailQuery, email).
-		StructScan(account)
-
-	if err != nil {
+	if err := repo.QueryRowxContext(ctx, GetOneByEmailQuery, email).StructScan(account); err != nil {
 		return nil, err
 	}
 
@@ -30,13 +26,9 @@ func (repo repository) GetOneByEmail(ctx context.Context, email string) (*accoun
 }
 
 func (repo repository) GetOneByID(ctx context.Context, id string) (*account.Schema, error) {
-	account := &account.Schema{}
+	account := new(account.Schema)
 
-	err := repo.
-		QueryRowxContext(ctx, GetOneByIDQuery, id).
-		StructScan(account)
-
-	if err != nil {
+	if err := repo.QueryRowxContext(ctx, GetOneByIDQuery, id).StructScan(account); err != nil {
 		return nil, err
 	}
 
@@ -44,7 +36,7 @@ func (repo repository) GetOneByID(ctx context.Context, id string) (*account.Sche
 }
 
 func (repo repository) Register(ctx context.Context, na *account.NewAccouuntDTO) (*account.Schema, error) {
-	account := &account.Schema{}
+	account := new(account.Schema)
 
 	err := repo.
 		QueryRowxContext(ctx, CreateAccountQuery, na.Firstname, na.Lastname, na.Email, na.Password, na.Phone).

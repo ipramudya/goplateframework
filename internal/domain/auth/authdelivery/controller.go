@@ -8,15 +8,17 @@ import (
 	"github.com/goplateframework/internal/domain/auth/authuc"
 	"github.com/goplateframework/internal/sdk/errs"
 	"github.com/goplateframework/internal/web/webcontext"
+	"github.com/goplateframework/pkg/logger"
 	"github.com/labstack/echo/v4"
 )
 
 type controller struct {
 	authUC *authuc.Usecase
+	log    *logger.Log
 }
 
-func newController(authUC *authuc.Usecase) *controller {
-	return &controller{authUC}
+func newController(authUC *authuc.Usecase, log *logger.Log) *controller {
+	return &controller{authUC, log}
 }
 
 func (con *controller) login(c echo.Context) error {
@@ -24,11 +26,13 @@ func (con *controller) login(c echo.Context) error {
 
 	if err := c.Bind(dto); err != nil {
 		e := errs.Newf(errs.InvalidArgument, "invalid request: %v", err)
+		con.log.Error(e.Debug())
 		return c.JSON(e.HTTPStatus(), e)
 	}
 
 	if err := dto.Validate(); err != nil {
 		e := errs.Newf(errs.InvalidArgument, "invalid request: (%v)", err)
+		con.log.Error(e.Debug())
 		return c.JSON(e.HTTPStatus(), e)
 	}
 
@@ -51,6 +55,12 @@ func (con *controller) logout(c echo.Context) error {
 
 	atc := webcontext.GetAccessTokenClaims(c.Request().Context())
 	rtc := webcontext.GetRefreshTokenClaims(c.Request().Context())
+
+	if atc == nil || rtc == nil {
+		e := errs.Newf(errs.Unauthenticated, "unauthenticated")
+		con.log.Error(e.Debug())
+		return e
+	}
 
 	err := con.authUC.Logout(c.Request().Context(), at, rt, atc, rtc)
 	if err != nil {

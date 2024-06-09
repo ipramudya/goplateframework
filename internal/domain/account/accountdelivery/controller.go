@@ -6,15 +6,17 @@ import (
 	"github.com/goplateframework/internal/domain/account"
 	"github.com/goplateframework/internal/domain/account/accountuc"
 	"github.com/goplateframework/internal/sdk/errs"
+	"github.com/goplateframework/pkg/logger"
 	"github.com/labstack/echo/v4"
 )
 
 type controller struct {
 	accountUC *accountuc.Usecase
+	log       *logger.Log
 }
 
-func newController(accountUC *accountuc.Usecase) *controller {
-	return &controller{accountUC}
+func newController(accountUC *accountuc.Usecase, log *logger.Log) *controller {
+	return &controller{accountUC, log}
 }
 
 func (con *controller) register(c echo.Context) (err error) {
@@ -22,11 +24,13 @@ func (con *controller) register(c echo.Context) (err error) {
 
 	if err := c.Bind(dto); err != nil {
 		e := errs.Newf(errs.InvalidArgument, "invalid request: %v", err)
+		con.log.Error(e.Debug())
 		return c.JSON(e.HTTPStatus(), e)
 	}
 
 	if err := dto.Validate(); err != nil {
 		e := errs.Newf(errs.InvalidArgument, "invalid request: (%v)", err)
+		con.log.Error(e.Debug())
 		return c.JSON(e.HTTPStatus(), e)
 	}
 
@@ -43,11 +47,13 @@ func (con *controller) changePassword(c echo.Context) error {
 
 	if err := c.Bind(dto); err != nil {
 		e := errs.Newf(errs.InvalidArgument, "invalid request: %v", err)
+		con.log.Error(e.Debug())
 		return c.JSON(e.HTTPStatus(), e)
 	}
 
 	if err := dto.Validate(); err != nil {
 		e := errs.Newf(errs.InvalidArgument, "invalid request: (%v)", err)
+		con.log.Error(e.Debug())
 		return c.JSON(e.HTTPStatus(), e)
 	}
 
