@@ -2,9 +2,13 @@ package accountrepo
 
 const (
 	GetOneByEmailQuery = `
-	SELECT id, firstname, lastname, email, password, phone, role, created_at, updated_at
-	FROM accounts 
+	SELECT * FROM accounts 
 	WHERE email=$1
+	LIMIT 1`
+
+	GetOneByIDQuery = `
+	SELECT * FROM accounts 
+	WHERE id=$1
 	LIMIT 1`
 
 	CreateAccountQuery = `

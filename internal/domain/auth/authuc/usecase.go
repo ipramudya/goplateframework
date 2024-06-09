@@ -2,6 +2,7 @@ package authuc
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	"github.com/goplateframework/config"
@@ -9,7 +10,6 @@ import (
 	"github.com/goplateframework/internal/domain/auth"
 	"github.com/goplateframework/internal/sdk/errs"
 	"github.com/goplateframework/internal/sdk/tokenutil"
-	"github.com/goplateframework/internal/web/webcontext"
 	"github.com/goplateframework/pkg/logger"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -107,34 +107,16 @@ func (uc *Usecase) Login(ctx context.Context, email, password string) (*auth.Acc
 	}, nil
 }
 
-func (uc *Usecase) Logout(ctx context.Context) error {
-	at := webcontext.GetAccessToken(ctx)
-	rt := webcontext.GetRefreshToken(ctx)
-
-	if at == "" || rt == "" {
-		e := errs.Newf(errs.Unauthenticated, "unauthenticated")
-		uc.log.Error(e.Debug())
-		return e
-	}
-
-	atClaims := webcontext.GetAccessTokenClaims(ctx)
-	rtClaims := webcontext.GetRefreshTokenClaims(ctx)
-
-	if atClaims == nil || rtClaims == nil {
-		e := errs.Newf(errs.Unauthenticated, "unauthenticated")
-		uc.log.Error(e.Debug())
-		return e
-	}
-
-	atRemaining := tokenutil.RemainingTime(&atClaims.RegisteredClaims)
-	rtRemaining := tokenutil.RemainingTime(&rtClaims.RegisteredClaims)
+func (uc *Usecase) Logout(ctx context.Context, accessToken, refreshToken string, atc *tokenutil.AccessTokenClaims, rtc *tokenutil.RefreshTokenClaims) error {
+	atRemaining := tokenutil.RemainingTime(&atc.RegisteredClaims)
+	rtRemaining := tokenutil.RemainingTime(&rtc.RegisteredClaims)
 
 	chanErrs := make(chan error, 2)
 	uc.wg.Add(2)
 
 	go func(e chan error) {
 		defer uc.wg.Done()
-		if err := uc.cache.AddAccessTokenToBlacklist(ctx, at, atRemaining); err != nil {
+		if err := uc.cache.AddAccessTokenToBlacklist(ctx, accessToken, atRemaining); err != nil {
 			e := errs.Newf(errs.Internal, "failed to add access token to blacklist: %v", err)
 			uc.log.Error(e.Debug())
 			chanErrs <- e
@@ -144,7 +126,7 @@ func (uc *Usecase) Logout(ctx context.Context) error {
 
 	go func(e chan error) {
 		defer uc.wg.Done()
-		if err := uc.cache.AddRefreshTokenToBlacklist(ctx, rtClaims.AccountID, rt, rtRemaining); err != nil {
+		if err := uc.cache.AddRefreshTokenToBlacklist(ctx, rtc.AccountID, refreshToken, rtRemaining); err != nil {
 			e := errs.Newf(errs.Internal, "failed to add refresh token to blacklist: %v", err)
 			uc.log.Error(e.Debug())
 			chanErrs <- e
@@ -161,4 +143,37 @@ func (uc *Usecase) Logout(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (uc *Usecase) Refresh(ctx context.Context, refreshToken, accountID string) (*auth.AccountWithTokenDTO, error) {
+	account, err := uc.accountRepo.GetOneByID(ctx, accountID)
+	if err != nil {
+		e := errs.New(errs.Internal, errors.New("something went wrong"))
+		uc.log.Error(e.Debug())
+		return &auth.AccountWithTokenDTO{}, e
+	}
+
+	if account == nil {
+		e := errs.New(errs.NotFound, errors.New("account not found"))
+		uc.log.Error(e.Debug())
+		return &auth.AccountWithTokenDTO{}, e
+	}
+
+	at, err := tokenutil.GenerateAccess(uc.conf, tokenutil.AccessTokenPayload{
+		AccountID: account.ID.String(),
+		Email:     account.Email,
+		Role:      account.Role,
+	})
+
+	if err != nil {
+		e := errs.Newf(errs.Internal, "failed to generate access_token: %v", err)
+		uc.log.Error(e.Debug())
+		return &auth.AccountWithTokenDTO{}, e
+	}
+
+	return &auth.AccountWithTokenDTO{
+		Account:      account.IntoAccountDTO(),
+		AccessToken:  at,
+		RefreshToken: refreshToken,
+	}, nil
 }

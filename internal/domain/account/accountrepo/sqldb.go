@@ -29,6 +29,20 @@ func (repo repository) GetOneByEmail(ctx context.Context, email string) (*accoun
 	return account, nil
 }
 
+func (repo repository) GetOneByID(ctx context.Context, id string) (*account.Schema, error) {
+	account := &account.Schema{}
+
+	err := repo.
+		QueryRowxContext(ctx, GetOneByIDQuery, id).
+		StructScan(account)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return account, nil
+}
+
 func (repo repository) Register(ctx context.Context, na *account.NewAccouuntDTO) (*account.Schema, error) {
 	account := &account.Schema{}
 
