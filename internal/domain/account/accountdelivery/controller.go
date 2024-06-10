@@ -1,11 +1,13 @@
 package accountdelivery
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/goplateframework/internal/domain/account"
 	"github.com/goplateframework/internal/domain/account/accountuc"
 	"github.com/goplateframework/internal/sdk/errs"
+	"github.com/goplateframework/internal/web/webcontext"
 	"github.com/goplateframework/pkg/logger"
 	"github.com/labstack/echo/v4"
 )
@@ -63,4 +65,20 @@ func (con *controller) changePassword(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusAccepted)
+}
+
+func (con *controller) me(c echo.Context) error {
+	claims := webcontext.GetAccessTokenClaims(c.Request().Context())
+
+	if claims == nil {
+		e := errs.New(errs.Unauthenticated, errors.New("unauthenticated"))
+		return c.JSON(e.HTTPStatus(), e)
+	}
+
+	account, err := con.accountUC.Me(c.Request().Context(), claims.AccountID)
+	if err != nil {
+		return c.JSON(err.(*errs.Error).HTTPStatus(), err)
+	}
+
+	return c.JSON(http.StatusOK, account)
 }

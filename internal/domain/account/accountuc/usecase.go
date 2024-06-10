@@ -89,3 +89,15 @@ func (uc *Usecase) ChangePassword(ctx context.Context, oldpass, newpass string) 
 
 	return nil
 }
+
+func (uc *Usecase) Me(ctx context.Context, accountID string) (*account.AccountDTO, error) {
+	a, err := uc.repoDB.GetOneByID(ctx, accountID)
+
+	if err != nil {
+		e := errs.Newf(errs.Internal, "something went wrong!")
+		uc.log.Error(e.Debug())
+		return &account.AccountDTO{}, e
+	}
+
+	return a.IntoAccountDTO(), nil
+}

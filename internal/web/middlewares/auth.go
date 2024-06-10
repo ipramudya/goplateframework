@@ -16,14 +16,14 @@ func (mid *Middleware) Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
 		token, err := tokenutil.ExtractBearerToken(authHeader)
 		if err != nil {
 			e := errs.Newf(errs.Unauthenticated, "unauthenticated: %v", err)
-			mid.log.Debug(e.Debug())
+			mid.log.Error(e.Debug())
 			return c.JSON(e.HTTPStatus(), e)
 		}
 
 		// whenever token exist in blacklist, it will return error
 		if val, _ := mid.cache.Get(c.Request().Context(), token).Result(); val != "" {
 			e := errs.New(errs.Unauthenticated, errors.New("unauthenticated: already logged out"))
-			mid.log.Debug(e.Debug())
+			mid.log.Error(e.Debug())
 			return c.JSON(e.HTTPStatus(), e)
 		}
 
@@ -31,12 +31,12 @@ func (mid *Middleware) Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
 		if err != nil {
 			if errors.Is(err, tokenutil.ErrInvalidToken) {
 				e := errs.Newf(errs.Unauthenticated, "unauthenticated: %v", err)
-				mid.log.Debug(e.Debug())
+				mid.log.Error(e.Debug())
 				return c.JSON(e.HTTPStatus(), e)
 			}
 
 			e := errs.New(errs.Internal, err)
-			mid.log.Debug(e.Debug())
+			mid.log.Error(e.Debug())
 			return c.JSON(e.HTTPStatus(), e)
 		}
 
@@ -53,21 +53,21 @@ func (mid *Middleware) RefreshAuth(next echo.HandlerFunc) echo.HandlerFunc {
 		refreshToken := c.Request().Header.Get("RF-Token")
 		if refreshToken == "" {
 			e := errs.New(errs.Unauthenticated, errors.New("unauthenticated"))
-			mid.log.Debug(e.Debug())
+			mid.log.Error(e.Debug())
 			return c.JSON(e.HTTPStatus(), e)
 		}
 
 		claims, err := tokenutil.ValidateRefresh(mid.conf, refreshToken)
 		if err != nil {
 			e := errs.New(errs.Unauthenticated, errors.New("unauthenticated"))
-			mid.log.Debug(e.Debug())
+			mid.log.Error(e.Debug())
 			return c.JSON(e.HTTPStatus(), e)
 		}
 
 		// whenever token exist in blacklist, it will return error
 		if val, _ := mid.cache.Get(c.Request().Context(), claims.AccountID).Result(); val != "" {
 			e := errs.New(errs.Unauthenticated, errors.New("unauthenticated: already logged out"))
-			mid.log.Debug(e.Debug())
+			mid.log.Error(e.Debug())
 			return c.JSON(e.HTTPStatus(), e)
 		}
 
