@@ -1,22 +1,22 @@
 package accountrepo
 
 const (
-	GetOneByEmailQuery = `
+	getOneByEmailQuery = `
 	SELECT * FROM accounts 
 	WHERE email=$1
 	LIMIT 1`
 
-	GetOneByIDQuery = `
+	getOneByIDQuery = `
 	SELECT * FROM accounts 
 	WHERE id=$1
 	LIMIT 1`
 
-	CreateAccountQuery = `
+	createAccountQuery = `
 	INSERT INTO accounts(firstname, lastname, email, password, phone)
 	VALUES($1, $2, $3, $4, $5)
 	RETURNING *`
 
-	ChangePasswordQuery = `
+	changePasswordQuery = `
 	UPDATE accounts
 	SET password=$1
 	WHERE email=$2`
