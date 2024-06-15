@@ -12,14 +12,10 @@ import (
 
 type TokenStrategy int
 
-const (
-	AccessTokenStrategy TokenStrategy = iota
-	RefreshTokenStrategy
-)
-
 var (
-	AccessTokenExpiredTime  = time.Now().Add(time.Minute * 10) // 60 min from now
-	RefreshTokenExpiredTime = time.Now().AddDate(0, 0, 30)     // 30 days from now
+	// AccessTokenExpiredTime  = time.Now().Add(time.Minute * 10) // 10 min from now
+	AccessTokenExpiredTime  = time.Now().AddDate(0, 0, 30)
+	RefreshTokenExpiredTime = time.Now().AddDate(0, 0, 30) // 30 days from now
 	Method                  = jwt.GetSigningMethod(jwt.SigningMethodHS256.Name)
 	ErrInvalidToken         = errors.New("invalid token")
 )

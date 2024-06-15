@@ -21,7 +21,7 @@ func newController(accountUC *accountuc.Usecase, log *logger.Log) *controller {
 	return &controller{accountUC, log}
 }
 
-func (con *controller) register(c echo.Context) (err error) {
+func (con *controller) register(c echo.Context) error {
 	dto := new(account.NewAccouuntDTO)
 
 	if err := c.Bind(dto); err != nil {

@@ -22,20 +22,6 @@ func New(conf *config.Config, log *logger.Log, repo address.DBRepository) *Useca
 	}
 }
 
-func (uc *Usecase) AddOne(ctx context.Context, a *address.NewAddressDTO) error {
-	if err := a.Validate(); err != nil {
-		return err
-	}
-	return uc.repoDB.AddOne(ctx, a)
-}
-
-func (uc *Usecase) GetOneByID(ctx context.Context, id string) (*address.Schema, error) {
-	return uc.repoDB.GetOneByID(ctx, id)
-}
-
-func (uc *Usecase) Update(ctx context.Context, a *address.NewAddressDTO) error {
-	if err := a.Validate(); err != nil {
-		return err
-	}
+func (uc *Usecase) Update(ctx context.Context, a *address.AddressDTO) error {
 	return uc.repoDB.Update(ctx, a)
 }
