@@ -3,5 +3,5 @@ package address
 import "context"
 
 type DBRepository interface {
-	Update(ctx context.Context, s *AddressDTO) error
+	Update(ctx context.Context, a *NewAddressDTO, id string) (*Schema, error)
 }

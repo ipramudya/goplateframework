@@ -4,6 +4,9 @@ import (
 	"github.com/goplateframework/internal/domain/account/accountdelivery"
 	"github.com/goplateframework/internal/domain/account/accountrepo"
 	"github.com/goplateframework/internal/domain/account/accountuc"
+	"github.com/goplateframework/internal/domain/address/addressdelivery"
+	"github.com/goplateframework/internal/domain/address/addressrepo"
+	"github.com/goplateframework/internal/domain/address/addressuc"
 	"github.com/goplateframework/internal/domain/auth/authdelivery"
 	"github.com/goplateframework/internal/domain/auth/authrepo"
 	"github.com/goplateframework/internal/domain/auth/authuc"
@@ -17,10 +20,12 @@ func routes(w *web.Web, conf *Config) {
 	authCacheRepo := authrepo.NewCache(conf.RDB)
 	accountDBRepo := accountrepo.NewDB(conf.DB)
 	outletDBRepo := outletrepo.NewDB(conf.DB)
+	addressDBRepo := addressrepo.NewDB(conf.DB)
 
 	accountUC := accountuc.New(conf.ServConf, conf.Log, accountDBRepo)
 	authUC := authuc.New(conf.ServConf, conf.Log, authCacheRepo, accountDBRepo)
 	outletUC := outletuc.New(conf.ServConf, conf.Log, outletDBRepo)
+	addressUC := addressuc.New(conf.ServConf, conf.Log, addressDBRepo)
 
 	accountdelivery.Route(w, &accountdelivery.Options{
 		Log:       conf.Log,
@@ -35,5 +40,10 @@ func routes(w *web.Web, conf *Config) {
 	outletdelivery.Route(w, &outletdelivery.Options{
 		Log:      conf.Log,
 		OutletUC: outletUC,
+	})
+
+	addressdelivery.Route(w, &addressdelivery.Options{
+		Log:       conf.Log,
+		AddressUC: addressUC,
 	})
 }

@@ -15,7 +15,15 @@ func NewDB(db *sqlx.DB) *repository {
 	return &repository{db}
 }
 
-func (repo repository) Update(ctx context.Context, a *address.AddressDTO) error {
-	_, err := repo.ExecContext(ctx, updateQuery, a.Street, a.City, a.Province, a.PostalCode, a.ID)
-	return err
+func (repo repository) Update(ctx context.Context, na *address.NewAddressDTO, id string) (*address.Schema, error) {
+	a := new(address.Schema)
+
+	err := repo.QueryRowxContext(ctx, updateQuery, na.Street, na.City, na.Province, na.PostalCode, id).
+		StructScan(a)
+
+	if err != nil {
+		return &address.Schema{}, err
+	}
+
+	return a, nil
 }
