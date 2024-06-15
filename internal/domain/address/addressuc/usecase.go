@@ -2,7 +2,8 @@ package addressuc
 
 import (
 	"context"
-	"fmt"
+	"database/sql"
+	"errors"
 
 	"github.com/goplateframework/config"
 	"github.com/goplateframework/internal/domain/address"
@@ -28,7 +29,12 @@ func (uc *Usecase) Update(ctx context.Context, na *address.NewAddressDTO, id str
 	a, err := uc.repoDB.Update(ctx, na, id)
 
 	if err != nil {
-		fmt.Printf("err: %v\n", err)
+		if err == sql.ErrNoRows {
+			e := errs.New(errs.NotFound, errors.New("address not found"))
+			uc.log.Error(e.Debug())
+			return &address.AddressDTO{}, e
+		}
+
 		e := errs.Newf(errs.Internal, "something went wrong!")
 		uc.log.Error(e.Debug())
 		return &address.AddressDTO{}, e

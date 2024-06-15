@@ -2,6 +2,8 @@ package outletuc
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"github.com/goplateframework/config"
 	"github.com/goplateframework/internal/domain/outlet"
@@ -27,7 +29,7 @@ func (uc *Usecase) Create(ctx context.Context, no *outlet.NewOutletDTO) (*outlet
 	oa, err := uc.repoDB.AddOne(ctx, no)
 
 	if err != nil {
-		e := errs.Newf(errs.Internal, "something went wrong!")
+		e := errs.New(errs.Internal, errors.New("something went wrong"))
 		uc.log.Error(e.Debug())
 		return &outlet.OutletDTO{}, e
 	}
@@ -39,7 +41,13 @@ func (uc *Usecase) GetOne(ctx context.Context, id string) (*outlet.OutletDTO, er
 	o, err := uc.repoDB.GetOneByID(ctx, id)
 
 	if err != nil {
-		e := errs.Newf(errs.Internal, "something went wrong!")
+		if err == sql.ErrNoRows {
+			e := errs.New(errs.NotFound, errors.New("outlet not found"))
+			uc.log.Error(e.Debug())
+			return &outlet.OutletDTO{}, e
+		}
+
+		e := errs.New(errs.Internal, errors.New("something went wrong"))
 		uc.log.Error(e.Debug())
 		return &outlet.OutletDTO{}, e
 	}
