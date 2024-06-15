@@ -13,21 +13,23 @@ import (
 )
 
 type Usecase struct {
-	conf   *config.Config
-	log    *logger.Log
-	dbRepo account.DBRepository
+	conf             *config.Config
+	log              *logger.Log
+	accountDBRepo    account.DBRepository
+	accountCacheRepo account.CacheRepository
 }
 
-func New(conf *config.Config, log *logger.Log, dbRepo account.DBRepository) *Usecase {
+func New(conf *config.Config, log *logger.Log, accountDBRepo account.DBRepository, accountCacheRepo account.CacheRepository) *Usecase {
 	return &Usecase{
-		conf:   conf,
-		log:    log,
-		dbRepo: dbRepo,
+		conf:             conf,
+		log:              log,
+		accountDBRepo:    accountDBRepo,
+		accountCacheRepo: accountCacheRepo,
 	}
 }
 
 func (uc *Usecase) Register(ctx context.Context, na *account.NewAccouuntDTO) (*account.AccountDTO, error) {
-	existingAccount, err := uc.dbRepo.GetOneByEmail(ctx, na.Email)
+	existingAccount, err := uc.accountDBRepo.GetOneByEmail(ctx, na.Email)
 	if existingAccount != nil && err == nil {
 		e := errs.Newf(errs.AlreadyExists, "email %s already exists", na.Email)
 		uc.log.Error(e.Debug())
@@ -42,7 +44,7 @@ func (uc *Usecase) Register(ctx context.Context, na *account.NewAccouuntDTO) (*a
 	}
 	na.Password = string(passHash)
 
-	accountCreated, err := uc.dbRepo.Register(ctx, na)
+	accountCreated, err := uc.accountDBRepo.Register(ctx, na)
 	if err != nil {
 		e := errs.Newf(errs.Internal, "failed to create account: %v", err)
 		uc.log.Error(e.Debug())
@@ -61,7 +63,7 @@ func (uc *Usecase) ChangePassword(ctx context.Context, oldpass, newpass string) 
 		return e
 	}
 
-	account, err := uc.dbRepo.GetOneByEmail(ctx, claims.Email)
+	account, err := uc.accountDBRepo.GetOneByEmail(ctx, claims.Email)
 	if err != nil {
 		e := errs.New(errs.Internal, errors.New("something went wrong"))
 		uc.log.Error(e.Debug())
@@ -81,7 +83,7 @@ func (uc *Usecase) ChangePassword(ctx context.Context, oldpass, newpass string) 
 		return e
 	}
 
-	if err := uc.dbRepo.ChangePassword(ctx, account.Email, string(passHash)); err != nil {
+	if err := uc.accountDBRepo.ChangePassword(ctx, account.Email, string(passHash)); err != nil {
 		e := errs.Newf(errs.Internal, "failed to change password: %v", err)
 		uc.log.Error(e.Debug())
 		return e
@@ -91,7 +93,7 @@ func (uc *Usecase) ChangePassword(ctx context.Context, oldpass, newpass string) 
 }
 
 func (uc *Usecase) Me(ctx context.Context, accountID string) (*account.AccountDTO, error) {
-	a, err := uc.dbRepo.GetOneByID(ctx, accountID)
+	meCache, err := uc.accountCacheRepo.GetMe(ctx, accountID)
 
 	if err != nil {
 		e := errs.New(errs.Internal, errors.New("something went wrong"))
@@ -99,5 +101,23 @@ func (uc *Usecase) Me(ctx context.Context, accountID string) (*account.AccountDT
 		return &account.AccountDTO{}, e
 	}
 
-	return a.IntoAccountDTO(), nil
+	if meCache == nil {
+		a, err := uc.accountDBRepo.GetOneByID(ctx, accountID)
+
+		if err != nil {
+			e := errs.New(errs.Internal, errors.New("something went wrong"))
+			uc.log.Error(e.Debug())
+			return &account.AccountDTO{}, e
+		}
+
+		if err := uc.accountCacheRepo.SetMe(ctx, a); err != nil {
+			e := errs.New(errs.Internal, errors.New("something went wrong"))
+			uc.log.Error(e.Debug())
+			return &account.AccountDTO{}, e
+		}
+
+		return a.IntoAccountDTO(), nil
+	} else {
+		return meCache.IntoAccountDTO(), nil
+	}
 }
