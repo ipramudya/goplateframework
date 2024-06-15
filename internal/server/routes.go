@@ -24,7 +24,7 @@ func routes(w *web.Web, conf *Config) {
 
 	accountUC := accountuc.New(conf.ServConf, conf.Log, accountDBRepo)
 	authUC := authuc.New(conf.ServConf, conf.Log, authCacheRepo, accountDBRepo)
-	outletUC := outletuc.New(conf.ServConf, conf.Log, outletDBRepo)
+	outletUC := outletuc.New(conf.ServConf, conf.Log, outletDBRepo, addressDBRepo)
 	addressUC := addressuc.New(conf.ServConf, conf.Log, addressDBRepo)
 
 	accountdelivery.Route(w, &accountdelivery.Options{

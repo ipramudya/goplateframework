@@ -24,4 +24,10 @@ const (
 		(SELECT province FROM new_address),
 		(SELECT postal_code FROM new_address)
 	`
+
+	updateOutletQuery = `
+	UPDATE outlets
+	SET name = $1, phone = $2, opening_time = $3, closing_time = $4, updated_at = CURRENT_TIMESTAMP
+	WHERE id = $5
+	RETURNING *`
 )

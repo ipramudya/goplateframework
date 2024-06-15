@@ -17,4 +17,5 @@ func Route(web *web.Web, opts *Options) {
 	g := web.Echo.Group("/api/v1/outlet", web.Mid.Authenticated)
 	g.POST("", con.create)
 	g.GET("/:id", con.getOne)
+	g.PUT("/:id", con.update)
 }

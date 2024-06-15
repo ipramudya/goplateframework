@@ -37,3 +37,16 @@ func (r *repository) AddOne(ctx context.Context, no *outlet.NewOutletDTO) (*outl
 
 	return o, nil
 }
+
+func (r *repository) Update(ctx context.Context, no *outlet.NewOutletDTO, id string) (*outlet.Schema, error) {
+	oa := new(outlet.Schema)
+
+	err := r.QueryRowxContext(ctx, updateOutletQuery, no.Name, no.Phone, no.OpeningTime, no.ClosingTime, id).
+		StructScan(oa)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return oa, nil
+}
