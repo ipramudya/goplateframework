@@ -14,19 +14,19 @@ import (
 type Usecase struct {
 	conf   *config.Config
 	log    *logger.Log
-	repoDB address.DBRepository
+	dbRepo address.DBRepository
 }
 
-func New(conf *config.Config, log *logger.Log, repo address.DBRepository) *Usecase {
+func New(conf *config.Config, log *logger.Log, dbRepo address.DBRepository) *Usecase {
 	return &Usecase{
 		conf:   conf,
 		log:    log,
-		repoDB: repo,
+		dbRepo: dbRepo,
 	}
 }
 
 func (uc *Usecase) Update(ctx context.Context, na *address.NewAddressDTO, id string) (*address.AddressDTO, error) {
-	a, err := uc.repoDB.Update(ctx, na, id)
+	a, err := uc.dbRepo.Update(ctx, na, id)
 
 	if err != nil {
 		if err == sql.ErrNoRows {

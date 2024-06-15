@@ -15,19 +15,19 @@ import (
 type Usecase struct {
 	conf   *config.Config
 	log    *logger.Log
-	repoDB account.DBRepository
+	dbRepo account.DBRepository
 }
 
-func New(conf *config.Config, log *logger.Log, repo account.DBRepository) *Usecase {
+func New(conf *config.Config, log *logger.Log, dbRepo account.DBRepository) *Usecase {
 	return &Usecase{
 		conf:   conf,
 		log:    log,
-		repoDB: repo,
+		dbRepo: dbRepo,
 	}
 }
 
 func (uc *Usecase) Register(ctx context.Context, na *account.NewAccouuntDTO) (*account.AccountDTO, error) {
-	existingAccount, err := uc.repoDB.GetOneByEmail(ctx, na.Email)
+	existingAccount, err := uc.dbRepo.GetOneByEmail(ctx, na.Email)
 	if existingAccount != nil && err == nil {
 		e := errs.Newf(errs.AlreadyExists, "email %s already exists", na.Email)
 		uc.log.Error(e.Debug())
@@ -42,7 +42,7 @@ func (uc *Usecase) Register(ctx context.Context, na *account.NewAccouuntDTO) (*a
 	}
 	na.Password = string(passHash)
 
-	accountCreated, err := uc.repoDB.Register(ctx, na)
+	accountCreated, err := uc.dbRepo.Register(ctx, na)
 	if err != nil {
 		e := errs.Newf(errs.Internal, "failed to create account: %v", err)
 		uc.log.Error(e.Debug())
@@ -61,7 +61,7 @@ func (uc *Usecase) ChangePassword(ctx context.Context, oldpass, newpass string) 
 		return e
 	}
 
-	account, err := uc.repoDB.GetOneByEmail(ctx, claims.Email)
+	account, err := uc.dbRepo.GetOneByEmail(ctx, claims.Email)
 	if err != nil {
 		e := errs.New(errs.Internal, errors.New("something went wrong"))
 		uc.log.Error(e.Debug())
@@ -81,7 +81,7 @@ func (uc *Usecase) ChangePassword(ctx context.Context, oldpass, newpass string) 
 		return e
 	}
 
-	if err := uc.repoDB.ChangePassword(ctx, account.Email, string(passHash)); err != nil {
+	if err := uc.dbRepo.ChangePassword(ctx, account.Email, string(passHash)); err != nil {
 		e := errs.Newf(errs.Internal, "failed to change password: %v", err)
 		uc.log.Error(e.Debug())
 		return e
@@ -91,7 +91,7 @@ func (uc *Usecase) ChangePassword(ctx context.Context, oldpass, newpass string) 
 }
 
 func (uc *Usecase) Me(ctx context.Context, accountID string) (*account.AccountDTO, error) {
-	a, err := uc.repoDB.GetOneByID(ctx, accountID)
+	a, err := uc.dbRepo.GetOneByID(ctx, accountID)
 
 	if err != nil {
 		e := errs.New(errs.Internal, errors.New("something went wrong"))

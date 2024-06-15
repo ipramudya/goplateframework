@@ -15,25 +15,25 @@ import (
 )
 
 type Usecase struct {
-	accountRepo account.DBRepository
-	cache       auth.CacheRepository
-	conf        *config.Config
-	log         *logger.Log
-	wg          *sync.WaitGroup
+	accountDBRepo account.DBRepository
+	authCacheRepo auth.CacheRepository
+	conf          *config.Config
+	log           *logger.Log
+	wg            *sync.WaitGroup
 }
 
 func New(conf *config.Config, log *logger.Log, cache auth.CacheRepository, repo account.DBRepository) *Usecase {
 	return &Usecase{
-		accountRepo: repo,
-		cache:       cache,
-		conf:        conf,
-		log:         log,
-		wg:          new(sync.WaitGroup),
+		accountDBRepo: repo,
+		authCacheRepo: cache,
+		conf:          conf,
+		log:           log,
+		wg:            new(sync.WaitGroup),
 	}
 }
 
 func (uc *Usecase) Login(ctx context.Context, email, password string) (*auth.AccountWithTokenDTO, error) {
-	account, err := uc.accountRepo.GetOneByEmail(ctx, email)
+	account, err := uc.accountDBRepo.GetOneByEmail(ctx, email)
 
 	if err != nil {
 		e := errs.New(errs.InvalidCredentials, errors.New("invalid email or password"))
@@ -47,7 +47,7 @@ func (uc *Usecase) Login(ctx context.Context, email, password string) (*auth.Acc
 		return &auth.AccountWithTokenDTO{}, e
 	}
 
-	if err := uc.cache.RemoveRefreshTokenFromBlacklist(ctx, account.ID.String()); err != nil {
+	if err := uc.authCacheRepo.RemoveRefreshTokenFromBlacklist(ctx, account.ID.String()); err != nil {
 		e := errs.Newf(errs.Internal, "failed to remove refresh token from blacklist: %v", err)
 		uc.log.Error(e.Debug())
 		return &auth.AccountWithTokenDTO{}, e
@@ -116,7 +116,7 @@ func (uc *Usecase) Logout(ctx context.Context, accessToken, refreshToken string,
 
 	go func(e chan error) {
 		defer uc.wg.Done()
-		if err := uc.cache.AddAccessTokenToBlacklist(ctx, accessToken, atRemaining); err != nil {
+		if err := uc.authCacheRepo.AddAccessTokenToBlacklist(ctx, accessToken, atRemaining); err != nil {
 			e := errs.Newf(errs.Internal, "failed to add access token to blacklist: %v", err)
 			uc.log.Error(e.Debug())
 			chanErrs <- e
@@ -126,7 +126,7 @@ func (uc *Usecase) Logout(ctx context.Context, accessToken, refreshToken string,
 
 	go func(e chan error) {
 		defer uc.wg.Done()
-		if err := uc.cache.AddRefreshTokenToBlacklist(ctx, rtc.AccountID, refreshToken, rtRemaining); err != nil {
+		if err := uc.authCacheRepo.AddRefreshTokenToBlacklist(ctx, rtc.AccountID, refreshToken, rtRemaining); err != nil {
 			e := errs.Newf(errs.Internal, "failed to add refresh token to blacklist: %v", err)
 			uc.log.Error(e.Debug())
 			chanErrs <- e
@@ -146,7 +146,7 @@ func (uc *Usecase) Logout(ctx context.Context, accessToken, refreshToken string,
 }
 
 func (uc *Usecase) Refresh(ctx context.Context, refreshToken, accountID string) (*auth.AccountWithTokenDTO, error) {
-	account, err := uc.accountRepo.GetOneByID(ctx, accountID)
+	account, err := uc.accountDBRepo.GetOneByID(ctx, accountID)
 	if err != nil {
 		e := errs.New(errs.Internal, errors.New("something went wrong"))
 		uc.log.Error(e.Debug())
