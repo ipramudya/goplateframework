@@ -18,6 +18,6 @@ const (
 
 	changePasswordQuery = `
 	UPDATE accounts
-	SET password=$1
+	SET password=$1, updated_at = CURRENT_TIMESTAMP
 	WHERE email=$2`
 )
