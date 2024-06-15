@@ -49,7 +49,7 @@ func (con *controller) logout(c echo.Context) error {
 	rt := webcontext.GetRefreshToken(c.Request().Context())
 
 	if at == "" || rt == "" {
-		e := errs.Newf(errs.Unauthenticated, "unauthenticated")
+		e := errs.New(errs.Unauthenticated, errors.New("unauthenticated"))
 		return e
 	}
 
@@ -57,7 +57,7 @@ func (con *controller) logout(c echo.Context) error {
 	rtc := webcontext.GetRefreshTokenClaims(c.Request().Context())
 
 	if atc == nil || rtc == nil {
-		e := errs.Newf(errs.Unauthenticated, "unauthenticated")
+		e := errs.New(errs.Unauthenticated, errors.New("unauthenticated"))
 		con.log.Error(e.Debug())
 		return e
 	}

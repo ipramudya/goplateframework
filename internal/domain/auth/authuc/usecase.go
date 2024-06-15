@@ -36,13 +36,13 @@ func (uc *Usecase) Login(ctx context.Context, email, password string) (*auth.Acc
 	account, err := uc.accountRepo.GetOneByEmail(ctx, email)
 
 	if err != nil {
-		e := errs.Newf(errs.InvalidCredentials, "invalid email or password")
+		e := errs.New(errs.InvalidCredentials, errors.New("invalid email or password"))
 		uc.log.Error(e.Debug())
 		return &auth.AccountWithTokenDTO{}, e
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(password)); err != nil {
-		e := errs.Newf(errs.InvalidCredentials, "invalid email or password")
+		e := errs.New(errs.InvalidCredentials, errors.New("invalid email or password"))
 		uc.log.Error(e.Debug())
 		return &auth.AccountWithTokenDTO{}, e
 	}
@@ -96,7 +96,7 @@ func (uc *Usecase) Login(ctx context.Context, email, password string) (*auth.Acc
 	at, rt := <-atCh, <-rtCh
 
 	if at == nil || rt == nil {
-		e := errs.Newf(errs.Internal, "failed to generate token")
+		e := errs.New(errs.Internal, errors.New("failed to generate token"))
 		return &auth.AccountWithTokenDTO{}, e
 	}
 

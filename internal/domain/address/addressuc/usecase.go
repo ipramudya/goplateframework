@@ -35,7 +35,7 @@ func (uc *Usecase) Update(ctx context.Context, na *address.NewAddressDTO, id str
 			return &address.AddressDTO{}, e
 		}
 
-		e := errs.Newf(errs.Internal, "something went wrong!")
+		e := errs.New(errs.Internal, errors.New("something went wrong"))
 		uc.log.Error(e.Debug())
 		return &address.AddressDTO{}, e
 	}

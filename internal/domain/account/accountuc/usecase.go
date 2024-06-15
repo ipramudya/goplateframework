@@ -63,13 +63,13 @@ func (uc *Usecase) ChangePassword(ctx context.Context, oldpass, newpass string) 
 
 	account, err := uc.repoDB.GetOneByEmail(ctx, claims.Email)
 	if err != nil {
-		e := errs.Newf(errs.Internal, "something went wrong!")
+		e := errs.New(errs.Internal, errors.New("something went wrong"))
 		uc.log.Error(e.Debug())
 		return e
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(oldpass)); err != nil {
-		e := errs.Newf(errs.InvalidCredentials, "invalid email or password")
+		e := errs.New(errs.InvalidCredentials, errors.New("invalid email or password"))
 		uc.log.Error(e.Debug())
 		return e
 	}
@@ -94,7 +94,7 @@ func (uc *Usecase) Me(ctx context.Context, accountID string) (*account.AccountDT
 	a, err := uc.repoDB.GetOneByID(ctx, accountID)
 
 	if err != nil {
-		e := errs.Newf(errs.Internal, "something went wrong!")
+		e := errs.New(errs.Internal, errors.New("something went wrong"))
 		uc.log.Error(e.Debug())
 		return &account.AccountDTO{}, e
 	}
