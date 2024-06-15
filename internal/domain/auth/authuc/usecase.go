@@ -38,19 +38,19 @@ func (uc *Usecase) Login(ctx context.Context, email, password string) (*auth.Acc
 	if err != nil {
 		e := errs.New(errs.InvalidCredentials, errors.New("invalid email or password"))
 		uc.log.Error(e.Debug())
-		return &auth.AccountWithTokenDTO{}, e
+		return nil, e
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(password)); err != nil {
 		e := errs.New(errs.InvalidCredentials, errors.New("invalid email or password"))
 		uc.log.Error(e.Debug())
-		return &auth.AccountWithTokenDTO{}, e
+		return nil, e
 	}
 
 	if err := uc.authCacheRepo.RemoveRefreshTokenFromBlacklist(ctx, account.ID.String()); err != nil {
 		e := errs.Newf(errs.Internal, "failed to remove refresh token from blacklist: %v", err)
 		uc.log.Error(e.Debug())
-		return &auth.AccountWithTokenDTO{}, e
+		return nil, e
 	}
 
 	atCh, rtCh := make(chan *string, 1), make(chan *string, 1) //access token channel & refresh token channel
@@ -97,7 +97,7 @@ func (uc *Usecase) Login(ctx context.Context, email, password string) (*auth.Acc
 
 	if at == nil || rt == nil {
 		e := errs.New(errs.Internal, errors.New("failed to generate token"))
-		return &auth.AccountWithTokenDTO{}, e
+		return nil, e
 	}
 
 	return &auth.AccountWithTokenDTO{
@@ -150,13 +150,13 @@ func (uc *Usecase) Refresh(ctx context.Context, refreshToken, accountID string) 
 	if err != nil {
 		e := errs.New(errs.Internal, errors.New("something went wrong"))
 		uc.log.Error(e.Debug())
-		return &auth.AccountWithTokenDTO{}, e
+		return nil, e
 	}
 
 	if account == nil {
 		e := errs.New(errs.NotFound, errors.New("account not found"))
 		uc.log.Error(e.Debug())
-		return &auth.AccountWithTokenDTO{}, e
+		return nil, e
 	}
 
 	at, err := tokenutil.GenerateAccess(uc.conf, tokenutil.AccessTokenPayload{
@@ -168,7 +168,7 @@ func (uc *Usecase) Refresh(ctx context.Context, refreshToken, accountID string) 
 	if err != nil {
 		e := errs.Newf(errs.Internal, "failed to generate access_token: %v", err)
 		uc.log.Error(e.Debug())
-		return &auth.AccountWithTokenDTO{}, e
+		return nil, e
 	}
 
 	return &auth.AccountWithTokenDTO{

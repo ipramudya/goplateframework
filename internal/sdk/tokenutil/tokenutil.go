@@ -10,8 +10,6 @@ import (
 	"github.com/goplateframework/config"
 )
 
-type TokenStrategy int
-
 var (
 	// AccessTokenExpiredTime  = time.Now().Add(time.Minute * 10) // 10 min from now
 	AccessTokenExpiredTime  = time.Now().AddDate(0, 0, 30)
@@ -85,11 +83,11 @@ func ValidateAccess(conf *config.Config, requestToken string) (*AccessTokenClaim
 	})
 
 	if err != nil {
-		return &AccessTokenClaims{}, fmt.Errorf("token signature is invalid")
+		return nil, fmt.Errorf("token signature is invalid")
 	}
 
 	if !token.Valid {
-		return &AccessTokenClaims{}, ErrInvalidToken
+		return nil, ErrInvalidToken
 	}
 
 	return claims, nil
@@ -106,11 +104,11 @@ func ValidateRefresh(conf *config.Config, requestToken string) (*RefreshTokenCla
 	})
 
 	if err != nil {
-		return &RefreshTokenClaims{}, fmt.Errorf("token signature is invalid")
+		return nil, fmt.Errorf("token signature is invalid")
 	}
 
 	if !token.Valid {
-		return &RefreshTokenClaims{}, ErrInvalidToken
+		return nil, ErrInvalidToken
 	}
 
 	return claims, nil

@@ -33,14 +33,14 @@ func (uc *Usecase) Register(ctx context.Context, na *account.NewAccouuntDTO) (*a
 	if existingAccount != nil && err == nil {
 		e := errs.Newf(errs.AlreadyExists, "email %s already exists", na.Email)
 		uc.log.Error(e.Debug())
-		return &account.AccountDTO{}, e
+		return nil, e
 	}
 
 	passHash, err := bcrypt.GenerateFromPassword([]byte(na.Password), bcrypt.DefaultCost)
 	if err != nil {
 		e := errs.Newf(errs.Internal, "failed to hash password: %v", err)
 		uc.log.Error(e.Debug())
-		return &account.AccountDTO{}, e
+		return nil, e
 	}
 	na.Password = string(passHash)
 
@@ -48,7 +48,7 @@ func (uc *Usecase) Register(ctx context.Context, na *account.NewAccouuntDTO) (*a
 	if err != nil {
 		e := errs.Newf(errs.Internal, "failed to create account: %v", err)
 		uc.log.Error(e.Debug())
-		return &account.AccountDTO{}, e
+		return nil, e
 	}
 
 	return accountCreated.IntoAccountDTO(), nil
@@ -98,7 +98,7 @@ func (uc *Usecase) Me(ctx context.Context, accountID string) (*account.AccountDT
 	if err != nil {
 		e := errs.New(errs.Internal, errors.New("something went wrong"))
 		uc.log.Error(e.Debug())
-		return &account.AccountDTO{}, e
+		return nil, e
 	}
 
 	if meCache == nil {
@@ -107,13 +107,13 @@ func (uc *Usecase) Me(ctx context.Context, accountID string) (*account.AccountDT
 		if err != nil {
 			e := errs.New(errs.Internal, errors.New("something went wrong"))
 			uc.log.Error(e.Debug())
-			return &account.AccountDTO{}, e
+			return nil, e
 		}
 
 		if err := uc.accountCacheRepo.SetMe(ctx, a); err != nil {
 			e := errs.New(errs.Internal, errors.New("something went wrong"))
 			uc.log.Error(e.Debug())
-			return &account.AccountDTO{}, e
+			return nil, e
 		}
 
 		return a.IntoAccountDTO(), nil

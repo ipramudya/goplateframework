@@ -22,7 +22,7 @@ func (repo repository) Update(ctx context.Context, na *address.NewAddressDTO, id
 		StructScan(a)
 
 	if err != nil {
-		return &address.Schema{}, err
+		return nil, err
 	}
 
 	return a, nil
@@ -34,7 +34,7 @@ func (repo repository) GetOneByID(ctx context.Context, id string) (*address.Sche
 	err := repo.QueryRowxContext(ctx, getOneByIDQuery, id).StructScan(a)
 
 	if err != nil {
-		return &address.Schema{}, err
+		return nil, err
 	}
 
 	return a, nil

@@ -32,12 +32,12 @@ func (uc *Usecase) Update(ctx context.Context, na *address.NewAddressDTO, id str
 		if err == sql.ErrNoRows {
 			e := errs.New(errs.NotFound, errors.New("address not found"))
 			uc.log.Error(e.Debug())
-			return &address.AddressDTO{}, e
+			return nil, e
 		}
 
 		e := errs.New(errs.Internal, errors.New("something went wrong"))
 		uc.log.Error(e.Debug())
-		return &address.AddressDTO{}, e
+		return nil, e
 	}
 
 	return a.IntoAddressDTO(), nil

@@ -34,7 +34,7 @@ func (uc *Usecase) Create(ctx context.Context, no *outlet.NewOutletDTO) (*outlet
 	if err != nil {
 		e := errs.New(errs.Internal, errors.New("something went wrong"))
 		uc.log.Error(e.Debug())
-		return &outlet.OutletDTO{}, e
+		return nil, e
 	}
 
 	return oa.IntoOutletDTO(), nil
@@ -47,12 +47,12 @@ func (uc *Usecase) GetOne(ctx context.Context, id string) (*outlet.OutletDTO, er
 		if err == sql.ErrNoRows {
 			e := errs.New(errs.NotFound, errors.New("outlet not found"))
 			uc.log.Error(e.Debug())
-			return &outlet.OutletDTO{}, e
+			return nil, e
 		}
 
 		e := errs.New(errs.Internal, errors.New("something went wrong"))
 		uc.log.Error(e.Debug())
-		return &outlet.OutletDTO{}, e
+		return nil, e
 	}
 
 	return o.IntoOutletDTO(), nil
@@ -65,12 +65,12 @@ func (uc *Usecase) Update(ctx context.Context, no *outlet.NewOutletDTO, id strin
 		if err == sql.ErrNoRows {
 			e := errs.New(errs.NotFound, errors.New("outlet not found"))
 			uc.log.Error(e.Debug())
-			return &outlet.OutletDTO{}, e
+			return nil, e
 		}
 
 		e := errs.New(errs.Internal, errors.New("something went wrong"))
 		uc.log.Error(e.Debug())
-		return &outlet.OutletDTO{}, e
+		return nil, e
 	}
 
 	a, err := uc.addrDBRepo.GetOneByID(ctx, o.AddressID)
@@ -78,12 +78,12 @@ func (uc *Usecase) Update(ctx context.Context, no *outlet.NewOutletDTO, id strin
 		if err == sql.ErrNoRows {
 			e := errs.New(errs.NotFound, errors.New("address not found"))
 			uc.log.Error(e.Debug())
-			return &outlet.OutletDTO{}, e
+			return nil, e
 		}
 
 		e := errs.New(errs.Internal, errors.New("something went wrong"))
 		uc.log.Error(e.Debug())
-		return &outlet.OutletDTO{}, e
+		return nil, e
 	}
 
 	return &outlet.OutletDTO{
