@@ -18,7 +18,12 @@ func NewDB(db *sqlx.DB) *repository {
 func (repo repository) GetOneByEmail(ctx context.Context, email string) (*account.Schema, error) {
 	account := new(account.Schema)
 
-	if err := repo.QueryRowxContext(ctx, getOneByEmailQuery, email).StructScan(account); err != nil {
+	q := `
+	SELECT * FROM accounts 
+	WHERE email=$1
+	LIMIT 1`
+
+	if err := repo.QueryRowxContext(ctx, q, email).StructScan(account); err != nil {
 		return nil, err
 	}
 
@@ -28,7 +33,12 @@ func (repo repository) GetOneByEmail(ctx context.Context, email string) (*accoun
 func (repo repository) GetOneByID(ctx context.Context, id string) (*account.Schema, error) {
 	account := new(account.Schema)
 
-	if err := repo.QueryRowxContext(ctx, getOneByIDQuery, id).StructScan(account); err != nil {
+	q := `
+	SELECT * FROM accounts 
+	WHERE id=$1
+	LIMIT 1`
+
+	if err := repo.QueryRowxContext(ctx, q, id).StructScan(account); err != nil {
 		return nil, err
 	}
 
@@ -38,8 +48,13 @@ func (repo repository) GetOneByID(ctx context.Context, id string) (*account.Sche
 func (repo repository) Register(ctx context.Context, na *account.NewAccouuntDTO) (*account.Schema, error) {
 	account := new(account.Schema)
 
+	q := `
+	INSERT INTO accounts(firstname, lastname, email, password, phone)
+	VALUES($1, $2, $3, $4, $5)
+	RETURNING *`
+
 	err := repo.
-		QueryRowxContext(ctx, createAccountQuery, na.Firstname, na.Lastname, na.Email, na.Password, na.Phone).
+		QueryRowxContext(ctx, q, na.Firstname, na.Lastname, na.Email, na.Password, na.Phone).
 		StructScan(account)
 
 	if err != nil {
@@ -50,6 +65,11 @@ func (repo repository) Register(ctx context.Context, na *account.NewAccouuntDTO)
 }
 
 func (repo repository) ChangePassword(ctx context.Context, email, password string) error {
-	_, err := repo.ExecContext(ctx, changePasswordQuery, password, email)
+	q := `
+	UPDATE accounts
+	SET password=$1, updated_at = CURRENT_TIMESTAMP
+	WHERE email=$2`
+
+	_, err := repo.ExecContext(ctx, q, password, email)
 	return err
 }
