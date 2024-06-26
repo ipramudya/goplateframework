@@ -15,7 +15,7 @@ func Route(web *web.Web, opts *Options) {
 	con := newController(opts.MenuUC, opts.Log)
 
 	g := web.Echo.Group("/api/v1/menu", web.Mid.Authenticated)
+	g.GET("", con.getAllByOutletID)
 	g.POST("", con.create)
 	g.PUT("/:id", con.update)
-	g.GET("/:outletId", con.getAllByOutletID)
 }

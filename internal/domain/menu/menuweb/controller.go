@@ -74,15 +74,14 @@ func (con *controller) update(c echo.Context) error {
 }
 
 func (con *controller) getAllByOutletID(c echo.Context) error {
-	id, err := uuid.Parse(c.Param("outletId"))
-
+	qp, err := menu.ParseQueryParams(c)
 	if err != nil {
-		e := errs.Newf(errs.InvalidArgument, "invalid id: %v", err)
+		e := errs.Newf(errs.InvalidArgument, "invalid request: %v", err)
 		con.log.Error(e.Debug())
 		return c.JSON(e.HTTPStatus(), e)
 	}
 
-	menus, err := con.menuUC.GetAllByOutletID(c.Request().Context(), id.String())
+	menus, err := con.menuUC.GetAllByOutletID(c.Request().Context(), qp)
 	if err != nil {
 		return c.JSON(err.(*errs.Error).HTTPStatus(), err)
 	}

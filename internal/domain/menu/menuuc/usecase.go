@@ -55,8 +55,8 @@ func (uc *Usecase) Update(ctx context.Context, nm *menu.NewMenuDTO, id string) (
 	return m.IntoMenuDTO(), nil
 }
 
-func (uc *Usecase) GetAllByOutletID(ctx context.Context, outletID string) ([]*menu.MenuDTO, error) {
-	m, err := uc.menuDBRepo.GetAllByOutletID(ctx, outletID)
+func (uc *Usecase) GetAllByOutletID(ctx context.Context, qp *menu.QueryParams) ([]*menu.MenuDTO, error) {
+	m, err := uc.menuDBRepo.GetAllByOutletID(ctx, qp.OutletID)
 
 	if err != nil {
 		e := errs.New(errs.Internal, errors.New("something went wrong"))
