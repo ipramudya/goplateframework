@@ -9,4 +9,5 @@
     },
     "Prettier-SQL.tabulateAlias": false,
     "Prettier-SQL.SQLFlavourOverride": "postgresql",
+    "editor.foldingImportsByDefault": true
 }

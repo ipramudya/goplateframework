@@ -82,7 +82,7 @@ func run(ctx context.Context, conf *config.Config, log *logger.Log) error {
 	}
 
 	// create http server, pass server configuration to server handler
-	server := &http.Server{
+	serv := &http.Server{
 		Addr:         conf.Server.Host + ":" + conf.Server.Port,
 		Handler:      server.Handler(&serverConf),
 		ReadTimeout:  time.Second * conf.Server.ReadTimeout,
@@ -94,8 +94,8 @@ func run(ctx context.Context, conf *config.Config, log *logger.Log) error {
 
 	// run server in goroutine
 	go func() {
-		log.Infof("server successfully running on %s", server.Addr)
-		serverErrs <- server.ListenAndServe()
+		log.Infof("server successfully running on %s", serv.Addr)
+		serverErrs <- serv.ListenAndServe()
 	}()
 
 	// main thread waits for shutdown signal within graceful shutdown
@@ -108,8 +108,8 @@ func run(ctx context.Context, conf *config.Config, log *logger.Log) error {
 		ctx, cancel := context.WithTimeout(ctx, conf.Server.CtxDefaultTimeout*time.Second)
 		defer cancel()
 
-		if err := server.Shutdown(ctx); err != nil {
-			server.Close()
+		if err := serv.Shutdown(ctx); err != nil {
+			serv.Close()
 			return fmt.Errorf("gracefull shutdown failed, server forced to shutdown: %v", err)
 		}
 
