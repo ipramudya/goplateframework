@@ -1,4 +1,4 @@
-package menudelivery
+package menuweb
 
 import (
 	"github.com/goplateframework/internal/domain/menu/menuuc"

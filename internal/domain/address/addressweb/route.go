@@ -1,4 +1,4 @@
-package addressdelivery
+package addressweb
 
 import (
 	"github.com/goplateframework/internal/domain/address/addressuc"

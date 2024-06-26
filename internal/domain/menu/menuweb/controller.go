@@ -1,4 +1,4 @@
-package menudelivery
+package menuweb
 
 import (
 	"net/http"

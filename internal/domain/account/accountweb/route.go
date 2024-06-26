@@ -1,4 +1,4 @@
-package accountdelivery
+package accountweb
 
 import (
 	"github.com/goplateframework/internal/domain/account/accountuc"

@@ -1,21 +1,21 @@
 package server
 
 import (
-	"github.com/goplateframework/internal/domain/account/accountdelivery"
 	"github.com/goplateframework/internal/domain/account/accountrepo"
 	"github.com/goplateframework/internal/domain/account/accountuc"
-	"github.com/goplateframework/internal/domain/address/addressdelivery"
+	"github.com/goplateframework/internal/domain/account/accountweb"
 	"github.com/goplateframework/internal/domain/address/addressrepo"
 	"github.com/goplateframework/internal/domain/address/addressuc"
-	"github.com/goplateframework/internal/domain/auth/authdelivery"
+	"github.com/goplateframework/internal/domain/address/addressweb"
 	"github.com/goplateframework/internal/domain/auth/authrepo"
 	"github.com/goplateframework/internal/domain/auth/authuc"
-	"github.com/goplateframework/internal/domain/menu/menudelivery"
+	"github.com/goplateframework/internal/domain/auth/authweb"
 	"github.com/goplateframework/internal/domain/menu/menurepo"
 	"github.com/goplateframework/internal/domain/menu/menuuc"
-	"github.com/goplateframework/internal/domain/outlet/outletdelivery"
+	"github.com/goplateframework/internal/domain/menu/menuweb"
 	"github.com/goplateframework/internal/domain/outlet/outletrepo"
 	"github.com/goplateframework/internal/domain/outlet/outletuc"
+	"github.com/goplateframework/internal/domain/outlet/outletweb"
 	"github.com/goplateframework/internal/web"
 )
 
@@ -33,27 +33,27 @@ func routes(w *web.Web, conf *Config) {
 	addressUC := addressuc.New(conf.ServConf, conf.Log, addressDBRepo)
 	menuUC := menuuc.New(conf.ServConf, conf.Log, menuDBRepo)
 
-	accountdelivery.Route(w, &accountdelivery.Options{
+	accountweb.Route(w, &accountweb.Options{
 		Log:       conf.Log,
 		AccountUC: accountUC,
 	})
 
-	authdelivery.Route(w, &authdelivery.Options{
+	authweb.Route(w, &authweb.Options{
 		Log:    conf.Log,
 		AuthUC: authUC,
 	})
 
-	outletdelivery.Route(w, &outletdelivery.Options{
+	outletweb.Route(w, &outletweb.Options{
 		Log:      conf.Log,
 		OutletUC: outletUC,
 	})
 
-	addressdelivery.Route(w, &addressdelivery.Options{
+	addressweb.Route(w, &addressweb.Options{
 		Log:       conf.Log,
 		AddressUC: addressUC,
 	})
 
-	menudelivery.Route(w, &menudelivery.Options{
+	menuweb.Route(w, &menuweb.Options{
 		Log:    conf.Log,
 		MenuUC: menuUC,
 	})

@@ -1,4 +1,4 @@
-package authdelivery
+package authweb
 
 import (
 	"errors"

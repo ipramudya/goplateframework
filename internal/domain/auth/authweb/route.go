@@ -1,4 +1,4 @@
-package authdelivery
+package authweb
 
 import (
 	"github.com/goplateframework/internal/domain/auth/authuc"

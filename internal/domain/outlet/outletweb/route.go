@@ -1,4 +1,4 @@
-package outletdelivery
+package outletweb
 
 import (
 	"github.com/goplateframework/internal/domain/outlet/outletuc"
