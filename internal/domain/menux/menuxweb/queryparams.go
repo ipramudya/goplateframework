@@ -40,7 +40,7 @@ type QueryParams struct {
 	}
 }
 
-func (uqp *UnparsedQueryParams) Parse(c echo.Context) (*QueryParams, error) {
+func (uqp *UnparsedQueryParams) Parse() (*QueryParams, error) {
 	qp := new(QueryParams)
 
 	if err := uqp.setPage(qp); err != nil {
@@ -99,6 +99,10 @@ func (uqp *UnparsedQueryParams) setFilter(qp *QueryParams) error {
 	qp.Filter.OutletId = outletId.String()
 
 	if uqp.lastId != "" {
+		if uqp.page == "" && uqp.size == "" {
+			return errors.New("page and size cannot be empty when last_id is set")
+		}
+
 		if lastId, err := uuid.Parse(uqp.lastId); err != nil {
 			return err
 		} else {

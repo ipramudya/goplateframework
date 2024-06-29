@@ -2,6 +2,7 @@ package queryparams
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 )
 
@@ -48,4 +49,9 @@ func ParsePage(pageNumber, pageSize string) (*Page, error) {
 	}
 
 	return &Page{Number: number, Size: size}, nil
+}
+
+func IsAllowedPaging(total int, page *Page) bool {
+	maxPage := int(math.Ceil(float64(total) / float64(page.Size)))
+	return page.Number <= maxPage
 }

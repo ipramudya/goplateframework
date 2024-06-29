@@ -33,7 +33,7 @@ func (r *repository) Create(ctx context.Context, m *menux.MenuDTO) error {
 	return nil
 }
 
-func (r *repository) GetAll(ctx context.Context, qp *menuxweb.QueryParams) (*[]menux.MenuDTO, error) {
+func (r *repository) GetAll(ctx context.Context, qp *menuxweb.QueryParams) ([]menux.MenuDTO, error) {
 	args := map[string]any{
 		"last_id":   qp.Filter.LastId,
 		"size":      qp.Page.Size,
@@ -61,27 +61,25 @@ func (r *repository) GetAll(ctx context.Context, qp *menuxweb.QueryParams) (*[]m
 		)`
 	}
 
-	buf := bytes.NewBufferString(query)
-
-	buf.WriteString(
-		fmt.Sprintf(" ORDER BY %s %s", qp.OrderBy.Field, qp.OrderBy.Direction),
-	)
+	queryBuf := bytes.NewBufferString(query)
 
 	if qp.Filter.Name != "" {
 		args["name"] = fmt.Sprintf("%%%s%%", qp.Filter.Name)
 
 		if args["last_id"] == "" {
-			buf.WriteString(" AND name ILIKE :name")
+			queryBuf.WriteString(" AND name LIKE :name")
 		} else {
-			buf.WriteString(" WHERE name ILIKE :name")
+			queryBuf.WriteString(" WHERE name LIKE :name")
 		}
 	}
 
+	queryBuf.WriteString(fmt.Sprintf(" ORDER BY %s %s", qp.OrderBy.Field, qp.OrderBy.Direction))
+
 	if args["last_id"] == "" {
-		buf.WriteString(" LIMIT :size")
+		queryBuf.WriteString(" LIMIT :size")
 	}
 
-	rows, err := r.NamedQueryContext(ctx, buf.String(), args)
+	rows, err := r.NamedQueryContext(ctx, queryBuf.String(), args)
 	if err != nil {
 		return nil, err
 	}
@@ -91,13 +89,12 @@ func (r *repository) GetAll(ctx context.Context, qp *menuxweb.QueryParams) (*[]m
 	for rows.Next() {
 		v := new(Model)
 		if err := rows.StructScan(v); err != nil {
-			fmt.Printf("ERROR: %v\n", err)
 			return nil, err
 		}
 		menus = append(menus, *v.intoDTO())
 	}
 
-	return &menus, nil
+	return menus, nil
 }
 
 func (r *repository) Update(ctx context.Context, nm *menux.MenuDTO) error {
@@ -119,4 +116,21 @@ func (r *repository) Update(ctx context.Context, nm *menux.MenuDTO) error {
 	}
 
 	return nil
+}
+
+func (r *repository) Count(ctx context.Context, outletId string) (int, error) {
+	query := `
+	SELECT COUNT(*) AS total FROM menus
+	WHERE outlet_id = $1`
+
+	var count struct {
+		Total int `db:"total"`
+	}
+
+	err := r.GetContext(ctx, &count, query, outletId)
+	if err != nil {
+		return 0, err
+	}
+
+	return count.Total, nil
 }

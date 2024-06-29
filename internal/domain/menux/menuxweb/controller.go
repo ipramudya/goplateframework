@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/goplateframework/internal/sdk/errs"
+	"github.com/goplateframework/internal/web/result"
 	"github.com/goplateframework/pkg/logger"
 	"github.com/labstack/echo/v4"
 
@@ -15,7 +16,7 @@ import (
 // required usecase methods which this controller needs to operate the business logic
 type Usecase interface {
 	Create(ctx context.Context, nm *menux.NewMenuDTO) (*menux.MenuDTO, error)
-	GetAll(ctx context.Context, qp *QueryParams) (*[]menux.MenuDTO, error)
+	GetAll(ctx context.Context, qp *QueryParams) (*result.Result[menux.MenuDTO], error)
 	Update(ctx context.Context, nm *menux.NewMenuDTO, id string) (*menux.MenuDTO, error)
 }
 
@@ -52,7 +53,7 @@ func (con *controller) create(c echo.Context) error {
 }
 
 func (con *controller) getAll(c echo.Context) error {
-	qp, err := getQueryParams(c).Parse(c)
+	qp, err := getQueryParams(c).Parse()
 
 	if err != nil {
 		e := errs.Newf(errs.InvalidArgument, "invalid request: %v", err)
