@@ -1,0 +1,122 @@
+package menuxrepo
+
+import (
+	"bytes"
+	"context"
+	"fmt"
+
+	"github.com/goplateframework/internal/domain/menux"
+	"github.com/goplateframework/internal/domain/menux/menuxweb"
+	"github.com/jmoiron/sqlx"
+)
+
+type repository struct {
+	*sqlx.DB
+}
+
+func NewDB(db *sqlx.DB) *repository {
+	return &repository{db}
+}
+
+func (r *repository) Create(ctx context.Context, m *menux.MenuDTO) error {
+	query := `
+	INSERT INTO menus 
+		(id, name, description, price, is_available, image_url, outlet_id, created_at, updated_at)
+	VALUES 
+		(:id, :name, :description, :price, :is_available, :image_url, :outlet_id, :created_at, :updated_at)`
+
+	_, err := r.NamedExecContext(ctx, query, intoModel(m))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *repository) GetAll(ctx context.Context, qp *menuxweb.QueryParams) (*[]menux.MenuDTO, error) {
+	args := map[string]any{
+		"last_id":   qp.Filter.LastId,
+		"size":      qp.Page.Size,
+		"outlet_id": qp.Filter.OutletId,
+	}
+
+	var query string
+
+	if args["last_id"] == "" {
+		query = `
+		SELECT * FROM menus
+		WHERE outlet_id = :outlet_id`
+	} else {
+		query = `
+		WITH last_data AS (
+			SELECT updated_at FROM menus
+			WHERE id = :last_id
+		)
+		SELECT * FROM (
+			SELECT * FROM menus
+			WHERE 
+				outlet_id = :outlet_id AND updated_at > (SELECT updated_at FROM last_data)
+			ORDER BY updated_at
+			FETCH NEXT :size ROWS ONLY
+		)`
+	}
+
+	buf := bytes.NewBufferString(query)
+
+	buf.WriteString(
+		fmt.Sprintf(" ORDER BY %s %s", qp.OrderBy.Field, qp.OrderBy.Direction),
+	)
+
+	if qp.Filter.Name != "" {
+		args["name"] = fmt.Sprintf("%%%s%%", qp.Filter.Name)
+
+		if args["last_id"] == "" {
+			buf.WriteString(" AND name ILIKE :name")
+		} else {
+			buf.WriteString(" WHERE name ILIKE :name")
+		}
+	}
+
+	if args["last_id"] == "" {
+		buf.WriteString(" LIMIT :size")
+	}
+
+	rows, err := r.NamedQueryContext(ctx, buf.String(), args)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var menus []menux.MenuDTO
+	for rows.Next() {
+		v := new(Model)
+		if err := rows.StructScan(v); err != nil {
+			fmt.Printf("ERROR: %v\n", err)
+			return nil, err
+		}
+		menus = append(menus, *v.intoDTO())
+	}
+
+	return &menus, nil
+}
+
+func (r *repository) Update(ctx context.Context, nm *menux.MenuDTO) error {
+	query := `
+	UPDATE 
+		menus
+	SET 
+		name = :name,
+		description = :description,
+		price = :price,
+		is_available = :is_available,
+		image_url = :image_url,
+		updated_at = :updated_at
+	WHERE id = :id`
+
+	_, err := r.NamedExecContext(ctx, query, intoModel(nm))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

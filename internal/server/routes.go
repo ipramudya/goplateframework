@@ -13,6 +13,9 @@ import (
 	"github.com/goplateframework/internal/domain/menu/menurepo"
 	"github.com/goplateframework/internal/domain/menu/menuuc"
 	"github.com/goplateframework/internal/domain/menu/menuweb"
+	"github.com/goplateframework/internal/domain/menux/menuxrepo"
+	"github.com/goplateframework/internal/domain/menux/menuxuc"
+	"github.com/goplateframework/internal/domain/menux/menuxweb"
 	"github.com/goplateframework/internal/domain/outlet/outletrepo"
 	"github.com/goplateframework/internal/domain/outlet/outletuc"
 	"github.com/goplateframework/internal/domain/outlet/outletweb"
@@ -56,5 +59,14 @@ func routes(w *web.Web, conf *Config) {
 	menuweb.Route(w, &menuweb.Options{
 		Log:    conf.Log,
 		MenuUC: menuUC,
+	})
+
+	// ______________________________________________
+
+	menuxDBRepo := menuxrepo.NewDB(conf.DB)
+	menuxUC := menuxuc.New(conf.ServConf, conf.Log, menuxDBRepo)
+	menuxweb.Route(w, &menuxweb.Options{
+		Log:    conf.Log,
+		MenuUC: menuxUC,
 	})
 }

@@ -64,3 +64,7 @@ func (e *Error) HTTPStatus() int {
 func (e *Error) Debug() string {
 	return fmt.Sprintf("code: %s, message: %s, func: %s, file: %s", e.Code, e.Message, e.FuncName, e.FileName)
 }
+
+func (e *Error) DebugWithDetail(detail string) string {
+	return fmt.Sprintf("code: %s, message: %s, func: %s, file: %s, detail: %s", e.Code, e.Message, e.FuncName, e.FileName, detail)
+}

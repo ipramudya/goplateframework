@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS
         
         FOREIGN KEY (outlet_id) REFERENCES outlets(id) ON DELETE CASCADE
     );
-CREATE UNIQUE INDEX IF NOT EXISTS menus_name_idx ON menus (name);
+CREATE INDEX IF NOT EXISTS menus_name_idx ON menus (name, created_at);
 -- +goose StatementEnd
 
 -- +goose Down
