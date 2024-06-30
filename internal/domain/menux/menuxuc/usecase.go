@@ -15,8 +15,8 @@ import (
 	"github.com/goplateframework/pkg/logger"
 )
 
-// required repository methods which this usecase needs to store or retrieve data
-type Repository interface {
+// required iRepository methods which this usecase needs to store or retrieve data
+type iRepository interface {
 	Create(ctx context.Context, nm *menux.MenuDTO) error
 	GetAll(ctx context.Context, qp *menuxweb.QueryParams) ([]menux.MenuDTO, error)
 	Update(ctx context.Context, nm *menux.MenuDTO) error
@@ -26,10 +26,10 @@ type Repository interface {
 type Usecase struct {
 	conf       *config.Config
 	log        *logger.Log
-	menuDBRepo Repository
+	menuDBRepo iRepository
 }
 
-func New(conf *config.Config, log *logger.Log, menuDBRepo Repository) *Usecase {
+func New(conf *config.Config, log *logger.Log, menuDBRepo iRepository) *Usecase {
 	return &Usecase{
 		conf:       conf,
 		log:        log,

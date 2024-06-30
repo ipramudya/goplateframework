@@ -18,22 +18,18 @@ func NewDB(db *sqlx.DB) *repository {
 	return &repository{db}
 }
 
-func (r *repository) Create(ctx context.Context, m *menux.MenuDTO) error {
+func (dbrepo repository) Create(ctx context.Context, m *menux.MenuDTO) error {
 	query := `
 	INSERT INTO menus 
 		(id, name, description, price, is_available, image_url, outlet_id, created_at, updated_at)
 	VALUES 
 		(:id, :name, :description, :price, :is_available, :image_url, :outlet_id, :created_at, :updated_at)`
 
-	_, err := r.NamedExecContext(ctx, query, intoModel(m))
-	if err != nil {
-		return err
-	}
-
-	return nil
+	_, err := dbrepo.NamedExecContext(ctx, query, intoModel(m))
+	return err
 }
 
-func (r *repository) GetAll(ctx context.Context, qp *menuxweb.QueryParams) ([]menux.MenuDTO, error) {
+func (dbrepo repository) GetAll(ctx context.Context, qp *menuxweb.QueryParams) ([]menux.MenuDTO, error) {
 	args := map[string]any{
 		"last_id":   qp.Filter.LastId,
 		"size":      qp.Page.Size,
@@ -79,7 +75,7 @@ func (r *repository) GetAll(ctx context.Context, qp *menuxweb.QueryParams) ([]me
 		queryBuf.WriteString(" LIMIT :size")
 	}
 
-	rows, err := r.NamedQueryContext(ctx, queryBuf.String(), args)
+	rows, err := dbrepo.NamedQueryContext(ctx, queryBuf.String(), args)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +93,7 @@ func (r *repository) GetAll(ctx context.Context, qp *menuxweb.QueryParams) ([]me
 	return menus, nil
 }
 
-func (r *repository) Update(ctx context.Context, nm *menux.MenuDTO) error {
+func (dbrepo repository) Update(ctx context.Context, nm *menux.MenuDTO) error {
 	query := `
 	UPDATE 
 		menus
@@ -110,15 +106,11 @@ func (r *repository) Update(ctx context.Context, nm *menux.MenuDTO) error {
 		updated_at = :updated_at
 	WHERE id = :id`
 
-	_, err := r.NamedExecContext(ctx, query, intoModel(nm))
-	if err != nil {
-		return err
-	}
-
-	return nil
+	_, err := dbrepo.NamedExecContext(ctx, query, intoModel(nm))
+	return err
 }
 
-func (r *repository) Count(ctx context.Context, outletId string) (int, error) {
+func (dbrepo repository) Count(ctx context.Context, outletId string) (int, error) {
 	query := `
 	SELECT COUNT(*) AS total FROM menus
 	WHERE outlet_id = $1`
@@ -127,7 +119,7 @@ func (r *repository) Count(ctx context.Context, outletId string) (int, error) {
 		Total int `db:"total"`
 	}
 
-	err := r.GetContext(ctx, &count, query, outletId)
+	err := dbrepo.GetContext(ctx, &count, query, outletId)
 	if err != nil {
 		return 0, err
 	}

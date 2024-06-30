@@ -7,6 +7,9 @@ import (
 	"github.com/goplateframework/internal/domain/address/addressrepo"
 	"github.com/goplateframework/internal/domain/address/addressuc"
 	"github.com/goplateframework/internal/domain/address/addressweb"
+	"github.com/goplateframework/internal/domain/addressx/addressxrepo"
+	"github.com/goplateframework/internal/domain/addressx/addressxuc"
+	"github.com/goplateframework/internal/domain/addressx/addressxweb"
 	"github.com/goplateframework/internal/domain/auth/authrepo"
 	"github.com/goplateframework/internal/domain/auth/authuc"
 	"github.com/goplateframework/internal/domain/auth/authweb"
@@ -19,6 +22,9 @@ import (
 	"github.com/goplateframework/internal/domain/outlet/outletrepo"
 	"github.com/goplateframework/internal/domain/outlet/outletuc"
 	"github.com/goplateframework/internal/domain/outlet/outletweb"
+	"github.com/goplateframework/internal/domain/outletx/outletxrepo"
+	"github.com/goplateframework/internal/domain/outletx/outletxuc"
+	"github.com/goplateframework/internal/domain/outletx/outletxweb"
 	"github.com/goplateframework/internal/web"
 )
 
@@ -68,5 +74,20 @@ func routes(w *web.Web, conf *Config) {
 	menuxweb.Route(w, &menuxweb.Options{
 		Log:    conf.Log,
 		MenuUC: menuxUC,
+	})
+
+	addressxDBRepo := addressxrepo.NewDB(conf.DB)
+	addressxUC := addressxuc.New(conf.ServConf, conf.Log, addressxDBRepo)
+	addressxweb.Route(w, &addressxweb.Options{
+		Log:       conf.Log,
+		AddressUC: addressxUC,
+	})
+
+	outletxDBRepo := outletxrepo.NewDB(conf.DB)
+	outletxUC := outletxuc.New(conf.ServConf, conf.Log, outletxDBRepo)
+	outletxweb.Route(w, &outletxweb.Options{
+		AddressUC: addressxUC,
+		OutletUC:  outletxUC,
+		Log:       conf.Log,
 	})
 }

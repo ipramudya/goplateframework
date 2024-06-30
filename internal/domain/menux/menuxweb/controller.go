@@ -14,18 +14,18 @@ import (
 )
 
 // required usecase methods which this controller needs to operate the business logic
-type Usecase interface {
+type iUsecase interface {
 	Create(ctx context.Context, nm *menux.NewMenuDTO) (*menux.MenuDTO, error)
 	GetAll(ctx context.Context, qp *QueryParams) (*result.Result[menux.MenuDTO], error)
 	Update(ctx context.Context, nm *menux.NewMenuDTO, id string) (*menux.MenuDTO, error)
 }
 
 type controller struct {
-	menuUC Usecase
+	menuUC iUsecase
 	log    *logger.Log
 }
 
-func newController(menuUC Usecase, log *logger.Log) *controller {
+func newController(menuUC iUsecase, log *logger.Log) *controller {
 	return &controller{menuUC, log}
 }
 

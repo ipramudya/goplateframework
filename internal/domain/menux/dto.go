@@ -20,8 +20,6 @@ type MenuDTO struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
-// ERROR: missing destination name is_available in *menux.MenuDTO
-
 // NewMenuDTO is what client should send to create new menu
 type NewMenuDTO struct {
 	Name        string  `json:"name"`

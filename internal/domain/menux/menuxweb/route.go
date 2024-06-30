@@ -7,7 +7,7 @@ import (
 
 type Options struct {
 	Log    *logger.Log
-	MenuUC Usecase
+	MenuUC iUsecase
 }
 
 func Route(web *web.Web, opts *Options) {
