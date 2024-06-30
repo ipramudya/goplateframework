@@ -41,7 +41,7 @@ func (uc *Usecase) Create(ctx context.Context, nm *menu.NewMenuDTO) (*menu.MenuD
 	now := time.Now()
 
 	m := &menu.MenuDTO{
-		ID:          uuid.New().String(),
+		ID:          uuid.New(),
 		Name:        nm.Name,
 		Description: nm.Description,
 		Price:       nm.Price,
@@ -86,13 +86,13 @@ func (uc *Usecase) GetAll(ctx context.Context, qp *menuweb.QueryParams) (*result
 
 	lastId := ""
 	if len(m) > 0 {
-		lastId = m[len(m)-1].ID
+		lastId = m[len(m)-1].ID.String()
 	}
 
 	return result.New(m, total, qp.Page.Number, qp.Page.Size, lastId), nil
 }
 
-func (uc *Usecase) Update(ctx context.Context, nm *menu.NewMenuDTO, id string) (*menu.MenuDTO, error) {
+func (uc *Usecase) Update(ctx context.Context, nm *menu.NewMenuDTO, id uuid.UUID) (*menu.MenuDTO, error) {
 	m := &menu.MenuDTO{
 		ID:          id,
 		Name:        nm.Name,

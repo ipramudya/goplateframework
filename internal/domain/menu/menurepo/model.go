@@ -3,11 +3,12 @@ package menurepo
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/goplateframework/internal/domain/menu"
 )
 
 type Model struct {
-	ID          string    `db:"id"`
+	ID          uuid.UUID `db:"id"`
 	Name        string    `db:"name"`
 	Description string    `db:"description"`
 	Price       float64   `db:"price"`

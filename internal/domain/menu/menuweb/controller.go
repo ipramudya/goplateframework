@@ -17,7 +17,7 @@ import (
 type iUsecase interface {
 	Create(ctx context.Context, nm *menu.NewMenuDTO) (*menu.MenuDTO, error)
 	GetAll(ctx context.Context, qp *QueryParams) (*result.Result[menu.MenuDTO], error)
-	Update(ctx context.Context, nm *menu.NewMenuDTO, id string) (*menu.MenuDTO, error)
+	Update(ctx context.Context, nm *menu.NewMenuDTO, id uuid.UUID) (*menu.MenuDTO, error)
 }
 
 type controller struct {
@@ -91,7 +91,7 @@ func (con *controller) update(c echo.Context) error {
 		return c.JSON(e.HTTPStatus(), e)
 	}
 
-	m, err := con.menuUC.Update(c.Request().Context(), nm, id.String())
+	m, err := con.menuUC.Update(c.Request().Context(), nm, id)
 	if err != nil {
 		return c.JSON(err.(*errs.Error).HTTPStatus(), err)
 	}
