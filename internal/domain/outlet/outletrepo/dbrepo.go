@@ -1,10 +1,10 @@
-package outletxrepo
+package outletrepo
 
 import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/goplateframework/internal/domain/outletx"
+	"github.com/goplateframework/internal/domain/outlet"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -16,7 +16,7 @@ func NewDB(db *sqlx.DB) *repository {
 	return &repository{db}
 }
 
-func (dbrepo repository) GetOne(ctx context.Context, id uuid.UUID) (*outletx.OutletDTO, error) {
+func (dbrepo repository) GetOne(ctx context.Context, id uuid.UUID) (*outlet.OutletDTO, error) {
 	oa := new(ModelWithAddress)
 
 	query := `
@@ -34,7 +34,7 @@ func (dbrepo repository) GetOne(ctx context.Context, id uuid.UUID) (*outletx.Out
 	return oa.intoDTO(), nil
 }
 
-func (dbrepo repository) Create(ctx context.Context, o *outletx.OutletDTO) error {
+func (dbrepo repository) Create(ctx context.Context, o *outlet.OutletDTO) error {
 	query := `
 	INSERT INTO outlets
 		(name, phone, opening_time, closing_time, address_id, created_at, updated_at)
@@ -45,7 +45,7 @@ func (dbrepo repository) Create(ctx context.Context, o *outletx.OutletDTO) error
 	return err
 }
 
-func (dbrepo repository) Update(ctx context.Context, o *outletx.OutletDTO) error {
+func (dbrepo repository) Update(ctx context.Context, o *outlet.OutletDTO) error {
 	query := `
 	UPDATE 
 		outlets

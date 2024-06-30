@@ -1,26 +1,31 @@
 package outlet
 
 import (
+	"time"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/google/uuid"
 	"github.com/goplateframework/internal/domain/address"
 	"github.com/goplateframework/internal/sdk/validate"
 )
 
 type OutletDTO struct {
-	ID          string              `json:"id"`
+	ID          uuid.UUID           `json:"id"`
+	Name        string              `json:"name"`
+	Phone       string              `json:"phone"`
+	OpeningTime string              `json:"opening_time"`
+	ClosingTime string              `json:"closing_time"`
+	CreatedAt   time.Time           `json:"created_at"`
+	UpdatedAt   time.Time           `json:"updated_at"`
+	Address     *address.AddressDTO `json:"address"`
+}
+
+type NewOutletDTO struct {
 	Name        string              `json:"name"`
 	Phone       string              `json:"phone"`
 	OpeningTime string              `json:"opening_time"`
 	ClosingTime string              `json:"closing_time"`
 	Address     *address.AddressDTO `json:"address"`
-}
-
-type NewOutletDTO struct {
-	Name        string                 `json:"name"`
-	Phone       string                 `json:"phone"`
-	OpeningTime string                 `json:"opening_time"`
-	ClosingTime string                 `json:"closing_time"`
-	Address     *address.NewAddressDTO `json:"address"`
 }
 
 func (o NewOutletDTO) Validate() error {

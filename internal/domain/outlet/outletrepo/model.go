@@ -1,11 +1,11 @@
-package outletxrepo
+package outletrepo
 
 import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/goplateframework/internal/domain/addressx"
-	"github.com/goplateframework/internal/domain/outletx"
+	"github.com/goplateframework/internal/domain/address"
+	"github.com/goplateframework/internal/domain/outlet"
 )
 
 type Model struct {
@@ -19,7 +19,7 @@ type Model struct {
 	UpdatedAt   time.Time `db:"updated_at"`
 }
 
-func intoModel(o *outletx.OutletDTO) *Model {
+func intoModel(o *outlet.OutletDTO) *Model {
 	return &Model{
 		ID:          o.ID,
 		Name:        o.Name,
@@ -48,14 +48,14 @@ type ModelWithAddress struct {
 	PostalCode string `db:"postal_code"`
 }
 
-func (ma *ModelWithAddress) intoDTO() *outletx.OutletDTO {
-	return &outletx.OutletDTO{
+func (ma *ModelWithAddress) intoDTO() *outlet.OutletDTO {
+	return &outlet.OutletDTO{
 		ID:          ma.ID,
 		Name:        ma.Name,
 		Phone:       ma.Phone,
 		OpeningTime: ma.OpeningTime,
 		ClosingTime: ma.ClosingTime,
-		Address: &addressx.AddressDTO{
+		Address: &address.AddressDTO{
 			ID:         ma.AddressID,
 			Street:     ma.Street,
 			City:       ma.City,

@@ -1,20 +1,20 @@
 package outletweb
 
 import (
-	"github.com/goplateframework/internal/domain/outlet/outletuc"
 	"github.com/goplateframework/internal/web"
 	"github.com/goplateframework/pkg/logger"
 )
 
 type Options struct {
-	Log      *logger.Log
-	OutletUC *outletuc.Usecase
+	AddressUC iAddressUsecase
+	OutletUC  iOutletUsecase
+	Log       *logger.Log
 }
 
 func Route(web *web.Web, opts *Options) {
-	con := newController(opts.OutletUC, opts.Log)
+	con := newController(opts.AddressUC, opts.OutletUC, opts.Log)
 
-	g := web.Echo.Group("/api/v1/outlet", web.Mid.Authenticated)
+	g := web.Echo.Group("/api/v1/new-outlet", web.Mid.Authenticated)
 	g.POST("", con.create)
 	g.GET("/:id", con.getOne)
 	g.PUT("/:id", con.update)

@@ -1,15 +1,24 @@
 package address
 
-import validation "github.com/go-ozzo/ozzo-validation/v4"
+import (
+	"time"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/google/uuid"
+)
+
+// AddressDTO is what we send to client
 type AddressDTO struct {
-	ID         string `json:"id"`
-	Street     string `json:"street"`
-	City       string `json:"city"`
-	Province   string `json:"province"`
-	PostalCode string `json:"postal_code"`
+	ID         uuid.UUID `json:"id"`
+	Street     string    `json:"street"`
+	City       string    `json:"city"`
+	Province   string    `json:"province"`
+	PostalCode string    `json:"postal_code"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
+// NewAddressDTO is what client should send to create new address
 type NewAddressDTO struct {
 	Street     string `json:"street"`
 	City       string `json:"city"`

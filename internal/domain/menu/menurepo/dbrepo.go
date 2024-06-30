@@ -1,12 +1,12 @@
-package menuxrepo
+package menurepo
 
 import (
 	"bytes"
 	"context"
 	"fmt"
 
-	"github.com/goplateframework/internal/domain/menux"
-	"github.com/goplateframework/internal/domain/menux/menuxweb"
+	"github.com/goplateframework/internal/domain/menu"
+	"github.com/goplateframework/internal/domain/menu/menuweb"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -18,7 +18,7 @@ func NewDB(db *sqlx.DB) *repository {
 	return &repository{db}
 }
 
-func (dbrepo repository) Create(ctx context.Context, m *menux.MenuDTO) error {
+func (dbrepo repository) Create(ctx context.Context, m *menu.MenuDTO) error {
 	query := `
 	INSERT INTO menus 
 		(id, name, description, price, is_available, image_url, outlet_id, created_at, updated_at)
@@ -29,7 +29,7 @@ func (dbrepo repository) Create(ctx context.Context, m *menux.MenuDTO) error {
 	return err
 }
 
-func (dbrepo repository) GetAll(ctx context.Context, qp *menuxweb.QueryParams) ([]menux.MenuDTO, error) {
+func (dbrepo repository) GetAll(ctx context.Context, qp *menuweb.QueryParams) ([]menu.MenuDTO, error) {
 	args := map[string]any{
 		"last_id":   qp.Filter.LastId,
 		"size":      qp.Page.Size,
@@ -81,7 +81,7 @@ func (dbrepo repository) GetAll(ctx context.Context, qp *menuxweb.QueryParams) (
 	}
 	defer rows.Close()
 
-	var menus []menux.MenuDTO
+	var menus []menu.MenuDTO
 	for rows.Next() {
 		v := new(Model)
 		if err := rows.StructScan(v); err != nil {
@@ -93,7 +93,7 @@ func (dbrepo repository) GetAll(ctx context.Context, qp *menuxweb.QueryParams) (
 	return menus, nil
 }
 
-func (dbrepo repository) Update(ctx context.Context, nm *menux.MenuDTO) error {
+func (dbrepo repository) Update(ctx context.Context, nm *menu.MenuDTO) error {
 	query := `
 	UPDATE 
 		menus

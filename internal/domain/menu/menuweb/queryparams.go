@@ -1,4 +1,4 @@
-package menuxweb
+package menuweb
 
 import (
 	"errors"

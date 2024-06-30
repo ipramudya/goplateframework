@@ -1,9 +1,9 @@
-package menuxrepo
+package menurepo
 
 import (
 	"time"
 
-	"github.com/goplateframework/internal/domain/menux"
+	"github.com/goplateframework/internal/domain/menu"
 )
 
 type Model struct {
@@ -18,7 +18,7 @@ type Model struct {
 	UpdatedAt   time.Time `db:"updated_at"`
 }
 
-func intoModel(m *menux.MenuDTO) *Model {
+func intoModel(m *menu.MenuDTO) *Model {
 	return &Model{
 		ID:          m.ID,
 		Name:        m.Name,
@@ -32,8 +32,8 @@ func intoModel(m *menux.MenuDTO) *Model {
 	}
 }
 
-func (m *Model) intoDTO() *menux.MenuDTO {
-	return &menux.MenuDTO{
+func (m *Model) intoDTO() *menu.MenuDTO {
+	return &menu.MenuDTO{
 		ID:          m.ID,
 		Name:        m.Name,
 		Description: m.Description,

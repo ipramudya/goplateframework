@@ -1,10 +1,10 @@
-package addressxrepo
+package addressrepo
 
 import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/goplateframework/internal/domain/addressx"
+	"github.com/goplateframework/internal/domain/address"
 )
 
 type Model struct {
@@ -17,7 +17,7 @@ type Model struct {
 	UpdatedAt  time.Time `db:"updated_at"`
 }
 
-func intoModel(a *addressx.AddressDTO) *Model {
+func intoModel(a *address.AddressDTO) *Model {
 	return &Model{
 		ID:         a.ID,
 		Street:     a.Street,

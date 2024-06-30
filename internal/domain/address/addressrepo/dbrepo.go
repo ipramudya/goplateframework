@@ -1,10 +1,10 @@
-package addressxrepo
+package addressrepo
 
 import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/goplateframework/internal/domain/addressx"
+	"github.com/goplateframework/internal/domain/address"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -16,7 +16,7 @@ func NewDB(db *sqlx.DB) *repository {
 	return &repository{db}
 }
 
-func (dbrepo repository) Create(ctx context.Context, a *addressx.AddressDTO) error {
+func (dbrepo repository) Create(ctx context.Context, a *address.AddressDTO) error {
 	query := `
 	INSERT INTO addresses 
 		(id, street, city, province, postal_code, created_at, updated_at)
@@ -28,14 +28,14 @@ func (dbrepo repository) Create(ctx context.Context, a *addressx.AddressDTO) err
 	return err
 }
 
-func (dbrepo repository) GetOne(ctx context.Context, id uuid.UUID) (*addressx.AddressDTO, error) {
+func (dbrepo repository) GetOne(ctx context.Context, id uuid.UUID) (*address.AddressDTO, error) {
 	query := `
 	SELECT * FROM addresses
 	WHERE id = $1
 	LIMIT 1
 	`
 
-	a := new(addressx.AddressDTO)
+	a := new(address.AddressDTO)
 	err := dbrepo.QueryRowContext(ctx, query, id).Scan(a)
 
 	if err != nil {
@@ -45,7 +45,7 @@ func (dbrepo repository) GetOne(ctx context.Context, id uuid.UUID) (*addressx.Ad
 	return a, nil
 }
 
-func (dbrepo repository) Update(ctx context.Context, na *addressx.AddressDTO) error {
+func (dbrepo repository) Update(ctx context.Context, na *address.AddressDTO) error {
 	query := `
 	UPDATE
 		addresses
