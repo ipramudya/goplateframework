@@ -1,10 +1,10 @@
-package accountxrepo
+package accountrepo
 
 import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/goplateframework/internal/domain/accountx"
+	"github.com/goplateframework/internal/domain/account"
 )
 
 type Model struct {
@@ -19,8 +19,8 @@ type Model struct {
 	UpdatedAt time.Time `db:"updated_at"`
 }
 
-func (m *Model) intoDTO() *accountx.AccountDTO {
-	return &accountx.AccountDTO{
+func (m *Model) intoDTO() *account.AccountDTO {
+	return &account.AccountDTO{
 		ID:        m.ID,
 		Firstname: m.Firstname,
 		Lastname:  m.Lastname,
@@ -31,7 +31,7 @@ func (m *Model) intoDTO() *accountx.AccountDTO {
 	}
 }
 
-func intoModel(a *accountx.AccountDTO) *Model {
+func intoModel(a *account.AccountDTO) *Model {
 	return &Model{
 		ID:        a.ID,
 		Firstname: a.Firstname,

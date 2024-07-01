@@ -1,23 +1,31 @@
 package authweb
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/goplateframework/internal/domain/auth"
-	"github.com/goplateframework/internal/domain/auth/authuc"
 	"github.com/goplateframework/internal/sdk/errs"
+	"github.com/goplateframework/internal/sdk/tokenutil"
 	"github.com/goplateframework/internal/web/webcontext"
 	"github.com/goplateframework/pkg/logger"
 	"github.com/labstack/echo/v4"
 )
 
+type iUsecase interface {
+	Login(ctx context.Context, email, password string) (*auth.AuthDTO, error)
+	Logout(ctx context.Context, accessToken, refreshToken string, atc *tokenutil.AccessTokenClaims, rtc *tokenutil.RefreshTokenClaims) error
+	Refresh(ctx context.Context, refreshToken string, accountID uuid.UUID) (*auth.AuthDTO, error)
+}
+
 type controller struct {
-	authUC *authuc.Usecase
+	authUC iUsecase
 	log    *logger.Log
 }
 
-func newController(authUC *authuc.Usecase, log *logger.Log) *controller {
+func newController(authUC iUsecase, log *logger.Log) *controller {
 	return &controller{authUC, log}
 }
 
@@ -36,12 +44,12 @@ func (con *controller) login(c echo.Context) error {
 		return c.JSON(e.HTTPStatus(), e)
 	}
 
-	account, err := con.authUC.Login(c.Request().Context(), dto.Email, dto.Password)
+	a, err := con.authUC.Login(c.Request().Context(), dto.Email, dto.Password)
 	if err != nil {
 		return c.JSON(err.(*errs.Error).HTTPStatus(), err)
 	}
 
-	return c.JSON(http.StatusOK, account)
+	return c.JSON(http.StatusOK, a)
 }
 
 func (con *controller) logout(c echo.Context) error {
@@ -85,11 +93,11 @@ func (con *controller) refreshToken(c echo.Context) error {
 		return c.JSON(e.HTTPStatus(), e)
 	}
 
-	account, err := con.authUC.Refresh(c.Request().Context(), rt, claims.AccountID.String())
+	a, err := con.authUC.Refresh(c.Request().Context(), rt, claims.AccountID)
 
 	if err != nil {
 		return c.JSON(err.(*errs.Error).HTTPStatus(), err)
 	}
 
-	return c.JSON(http.StatusOK, account)
+	return c.JSON(http.StatusOK, a)
 }

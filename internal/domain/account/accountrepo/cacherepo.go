@@ -1,4 +1,4 @@
-package accountxrepo
+package accountrepo
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
-	"github.com/goplateframework/internal/domain/accountx"
+	"github.com/goplateframework/internal/domain/account"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -23,7 +23,7 @@ func NewCache(client *redis.Client) *Cache {
 	return &Cache{client}
 }
 
-func (c *Cache) SetMe(ctx context.Context, accountPayload *accountx.AccountDTO) error {
+func (c *Cache) SetMe(ctx context.Context, accountPayload *account.AccountDTO) error {
 	data, err := sonic.Marshal(accountPayload)
 
 	if err != nil {
@@ -34,7 +34,7 @@ func (c *Cache) SetMe(ctx context.Context, accountPayload *accountx.AccountDTO) 
 	return c.Set(ctx, key, data, meExpires).Err()
 }
 
-func (c *Cache) GetMe(ctx context.Context, id uuid.UUID) (*accountx.AccountDTO, error) {
+func (c *Cache) GetMe(ctx context.Context, id uuid.UUID) (*account.AccountDTO, error) {
 	key := getMeKey(id)
 
 	data, err := c.Get(ctx, key).Result()

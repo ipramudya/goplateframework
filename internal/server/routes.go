@@ -4,9 +4,6 @@ import (
 	"github.com/goplateframework/internal/domain/account/accountrepo"
 	"github.com/goplateframework/internal/domain/account/accountuc"
 	"github.com/goplateframework/internal/domain/account/accountweb"
-	"github.com/goplateframework/internal/domain/accountx/accountxrepo"
-	"github.com/goplateframework/internal/domain/accountx/accountxuc"
-	"github.com/goplateframework/internal/domain/accountx/accountxweb"
 	"github.com/goplateframework/internal/domain/address/addressrepo"
 	"github.com/goplateframework/internal/domain/address/addressuc"
 	"github.com/goplateframework/internal/domain/address/addressweb"
@@ -23,31 +20,19 @@ import (
 )
 
 func routes(w *web.Web, conf *Config) {
-	authCacheRepo := authrepo.NewCache(conf.RDB)
 	accountDBRepo := accountrepo.NewDB(conf.DB)
 	accountCacheRepo := accountrepo.NewCache(conf.RDB)
-
 	accountUC := accountuc.New(conf.ServConf, conf.Log, accountDBRepo, accountCacheRepo)
-	authUC := authuc.New(conf.ServConf, conf.Log, authCacheRepo, accountDBRepo)
-
 	accountweb.Route(w, &accountweb.Options{
 		Log:       conf.Log,
 		AccountUC: accountUC,
 	})
 
+	authCacheRepo := authrepo.NewCache(conf.RDB)
+	authUC := authuc.New(conf.ServConf, conf.Log, authCacheRepo, accountDBRepo)
 	authweb.Route(w, &authweb.Options{
 		Log:    conf.Log,
 		AuthUC: authUC,
-	})
-
-	// ______________________________________________
-
-	accountxDBRepo := accountxrepo.NewDB(conf.DB)
-	accountxCacheRepo := accountxrepo.NewCache(conf.RDB)
-	accountxUC := accountxuc.New(conf.ServConf, conf.Log, accountxDBRepo, accountxCacheRepo)
-	accountxweb.Route(w, &accountxweb.Options{
-		Log:       conf.Log,
-		AccountUC: accountxUC,
 	})
 
 	menuDBRepo := menurepo.NewDB(conf.DB)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -21,17 +22,17 @@ func (c *Cache) AddAccessTokenToBlacklist(ctx context.Context, token string, exp
 }
 
 // stored refresh token using account id as key on redis
-func (c *Cache) AddRefreshTokenToBlacklist(ctx context.Context, accountID, token string, exp time.Duration) error {
-	return c.Set(ctx, accountID, token, exp).Err()
+func (c *Cache) AddRefreshTokenToBlacklist(ctx context.Context, accountID uuid.UUID, token string, exp time.Duration) error {
+	return c.Set(ctx, accountID.String(), token, exp).Err()
 }
 
 // remove existing refresh token from redis using account id to make redis clean
-func (c *Cache) RemoveRefreshTokenFromBlacklist(ctx context.Context, accountID string) error {
-	_, err := c.Get(ctx, accountID).Result()
+func (c *Cache) RemoveRefreshTokenFromBlacklist(ctx context.Context, accountID uuid.UUID) error {
+	_, err := c.Get(ctx, accountID.String()).Result()
 
 	if err == redis.Nil {
 		return nil
 	}
 
-	return c.Del(ctx, accountID).Err()
+	return c.Del(ctx, accountID.String()).Err()
 }

@@ -3,87 +3,103 @@ package accountuc
 import (
 	"context"
 	"errors"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/goplateframework/config"
 	"github.com/goplateframework/internal/domain/account"
 	"github.com/goplateframework/internal/sdk/errs"
-	"github.com/goplateframework/internal/web/webcontext"
 	"github.com/goplateframework/pkg/logger"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type Usecase struct {
-	conf             *config.Config
-	log              *logger.Log
-	accountDBRepo    account.DBRepository
-	accountCacheRepo account.CacheRepository
+type iDBRepository interface {
+	GetOne(ctx context.Context, id uuid.UUID) (*account.AccountDTO, error)
+	GetOneByEmail(ctx context.Context, email string) (*account.AccountDTO, error)
+	Create(ctx context.Context, a *account.AccountDTO) error
+	ChangePassword(ctx context.Context, email, password string) error
 }
 
-func New(conf *config.Config, log *logger.Log, accountDBRepo account.DBRepository, accountCacheRepo account.CacheRepository) *Usecase {
+type iCacheRepository interface {
+	SetMe(ctx context.Context, accountPayload *account.AccountDTO) error
+	GetMe(ctx context.Context, id uuid.UUID) (*account.AccountDTO, error)
+}
+
+type Usecase struct {
+	conf      *config.Config
+	log       *logger.Log
+	dbRepo    iDBRepository
+	cacheRepo iCacheRepository
+}
+
+func New(conf *config.Config, log *logger.Log, dbRepo iDBRepository, cacheRepo iCacheRepository) *Usecase {
 	return &Usecase{
-		conf:             conf,
-		log:              log,
-		accountDBRepo:    accountDBRepo,
-		accountCacheRepo: accountCacheRepo,
+		conf:      conf,
+		log:       log,
+		dbRepo:    dbRepo,
+		cacheRepo: cacheRepo,
 	}
 }
 
 func (uc *Usecase) Register(ctx context.Context, na *account.NewAccouuntDTO) (*account.AccountDTO, error) {
-	existingAccount, err := uc.accountDBRepo.GetOneByEmail(ctx, na.Email)
-	if existingAccount != nil && err == nil {
+	existing, err := uc.dbRepo.GetOneByEmail(ctx, na.Email)
+	if existing != nil && err == nil {
 		e := errs.Newf(errs.AlreadyExists, "email %s already exists", na.Email)
 		uc.log.Error(e.Debug())
 		return nil, e
 	}
 
-	passHash, err := bcrypt.GenerateFromPassword([]byte(na.Password), bcrypt.DefaultCost)
+	hashedPass, err := bcrypt.GenerateFromPassword([]byte(na.Password), bcrypt.DefaultCost)
 	if err != nil {
 		e := errs.Newf(errs.Internal, "failed to hash password: %v", err)
 		uc.log.Error(e.Debug())
 		return nil, e
 	}
-	na.Password = string(passHash)
 
-	accountCreated, err := uc.accountDBRepo.Register(ctx, na)
-	if err != nil {
+	now := time.Now()
+	a := &account.AccountDTO{
+		ID:        uuid.New(),
+		Firstname: na.Firstname,
+		Lastname:  na.Lastname,
+		Phone:     na.Phone,
+		Email:     na.Email,
+		Password:  string(hashedPass),
+		Role:      "user",
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
+	if err := uc.dbRepo.Create(ctx, a); err != nil {
 		e := errs.Newf(errs.Internal, "failed to create account: %v", err)
 		uc.log.Error(e.Debug())
 		return nil, e
 	}
 
-	return accountCreated.IntoAccountDTO(), nil
+	return a, nil
 }
 
-func (uc *Usecase) ChangePassword(ctx context.Context, oldpass, newpass string) error {
-	claims := webcontext.GetAccessTokenClaims(ctx)
-
-	if claims == nil {
-		e := errs.New(errs.Unauthenticated, errors.New("unauthenticated"))
-		uc.log.Error(e.Debug())
-		return e
-	}
-
-	account, err := uc.accountDBRepo.GetOneByEmail(ctx, claims.Email)
+func (uc *Usecase) ChangePassword(ctx context.Context, cp *account.ChangePasswordDTO, email string) error {
+	a, err := uc.dbRepo.GetOneByEmail(ctx, email)
 	if err != nil {
 		e := errs.New(errs.Internal, errors.New("something went wrong"))
 		uc.log.Error(e.Debug())
 		return e
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(oldpass)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(a.Password), []byte(cp.OldPassword)); err != nil {
 		e := errs.New(errs.InvalidCredentials, errors.New("invalid email or password"))
 		uc.log.Error(e.Debug())
 		return e
 	}
 
-	passHash, err := bcrypt.GenerateFromPassword([]byte(newpass), bcrypt.DefaultCost)
+	hashedPass, err := bcrypt.GenerateFromPassword([]byte(cp.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
 		e := errs.Newf(errs.Internal, "failed to hash password: %v", err)
 		uc.log.Error(e.Debug())
 		return e
 	}
 
-	if err := uc.accountDBRepo.ChangePassword(ctx, account.Email, string(passHash)); err != nil {
+	if err := uc.dbRepo.ChangePassword(ctx, email, string(hashedPass)); err != nil {
 		e := errs.Newf(errs.Internal, "failed to change password: %v", err)
 		uc.log.Error(e.Debug())
 		return e
@@ -92,8 +108,19 @@ func (uc *Usecase) ChangePassword(ctx context.Context, oldpass, newpass string) 
 	return nil
 }
 
-func (uc *Usecase) Me(ctx context.Context, accountID string) (*account.AccountDTO, error) {
-	meCache, err := uc.accountCacheRepo.GetMe(ctx, accountID)
+func (uc *Usecase) Me(ctx context.Context, accountID uuid.UUID) (*account.AccountDTO, error) {
+	meCache, err := uc.cacheRepo.GetMe(ctx, accountID)
+	if err != nil {
+		e := errs.New(errs.Internal, errors.New("something went wrong"))
+		uc.log.Error(e.Debug())
+		return nil, e
+	}
+
+	if meCache != nil {
+		return meCache, nil
+	}
+
+	a, err := uc.dbRepo.GetOne(ctx, accountID)
 
 	if err != nil {
 		e := errs.New(errs.Internal, errors.New("something went wrong"))
@@ -101,23 +128,12 @@ func (uc *Usecase) Me(ctx context.Context, accountID string) (*account.AccountDT
 		return nil, e
 	}
 
-	if meCache == nil {
-		a, err := uc.accountDBRepo.GetOneByID(ctx, accountID)
+	if err := uc.cacheRepo.SetMe(ctx, a); err != nil {
+		e := errs.New(errs.Internal, errors.New("something went wrong"))
+		uc.log.Error(e.Debug())
+		return nil, e
 
-		if err != nil {
-			e := errs.New(errs.Internal, errors.New("something went wrong"))
-			uc.log.Error(e.Debug())
-			return nil, e
-		}
-
-		if err := uc.accountCacheRepo.SetMe(ctx, a); err != nil {
-			e := errs.New(errs.Internal, errors.New("something went wrong"))
-			uc.log.Error(e.Debug())
-			return nil, e
-		}
-
-		return a.IntoAccountDTO(), nil
-	} else {
-		return meCache.IntoAccountDTO(), nil
 	}
+
+	return a, nil
 }

@@ -1,10 +1,10 @@
-package accountxrepo
+package accountrepo
 
 import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/goplateframework/internal/domain/accountx"
+	"github.com/goplateframework/internal/domain/account"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -16,7 +16,7 @@ func NewDB(db *sqlx.DB) *repository {
 	return &repository{db}
 }
 
-func (dbrepo *repository) GetOneByEmail(ctx context.Context, email string) (*accountx.AccountDTO, error) {
+func (dbrepo *repository) GetOneByEmail(ctx context.Context, email string) (*account.AccountDTO, error) {
 	a := new(Model)
 
 	query := `
@@ -32,7 +32,7 @@ func (dbrepo *repository) GetOneByEmail(ctx context.Context, email string) (*acc
 	return a.intoDTO(), nil
 }
 
-func (dbrepo *repository) GetOne(ctx context.Context, id uuid.UUID) (*accountx.AccountDTO, error) {
+func (dbrepo *repository) GetOne(ctx context.Context, id uuid.UUID) (*account.AccountDTO, error) {
 	a := new(Model)
 
 	query := `
@@ -48,7 +48,7 @@ func (dbrepo *repository) GetOne(ctx context.Context, id uuid.UUID) (*accountx.A
 	return a.intoDTO(), nil
 }
 
-func (dbrepo *repository) Create(ctx context.Context, a *accountx.AccountDTO) error {
+func (dbrepo *repository) Create(ctx context.Context, a *account.AccountDTO) error {
 	query := `
 	INSERT INTO accounts
 		(id, firstname, lastname, email, password, phone, role, created_at, updated_at)

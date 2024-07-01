@@ -6,11 +6,12 @@ import (
 	"github.com/goplateframework/internal/domain/account"
 )
 
-type AccountWithTokenDTO struct {
+type AuthDTO struct {
 	AccessToken  string              `json:"access_token"`
 	RefreshToken string              `json:"refresh_token"`
 	Account      *account.AccountDTO `json:"account"`
 }
+
 type LoginDTO struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
