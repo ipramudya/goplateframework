@@ -65,7 +65,7 @@ func (mid *Middleware) RefreshAuth(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		// whenever token exist in blacklist, it will return error
-		if val, _ := mid.cache.Get(c.Request().Context(), claims.AccountID).Result(); val != "" {
+		if val, _ := mid.cache.Get(c.Request().Context(), claims.AccountID.String()).Result(); val != "" {
 			e := errs.New(errs.Unauthenticated, errors.New("unauthenticated: already logged out"))
 			mid.log.Error(e.Debug())
 			return c.JSON(e.HTTPStatus(), e)

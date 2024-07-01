@@ -62,7 +62,7 @@ func (uc *Usecase) Login(ctx context.Context, email, password string) (*auth.Acc
 			close(ch)
 		}()
 		at, err := tokenutil.GenerateAccess(uc.conf, tokenutil.AccessTokenPayload{
-			AccountID: account.ID.String(),
+			AccountID: account.ID,
 			Email:     account.Email,
 			Role:      account.Role,
 		})
@@ -81,7 +81,7 @@ func (uc *Usecase) Login(ctx context.Context, email, password string) (*auth.Acc
 			close(ch)
 		}()
 		rt, err := tokenutil.GenerateRefresh(uc.conf, tokenutil.RefreshTokenPayload{
-			AccountID: account.ID.String(),
+			AccountID: account.ID,
 		})
 		if err != nil {
 			e := errs.Newf(errs.Internal, "failed to generate refresh_token: %v", err)
@@ -126,7 +126,7 @@ func (uc *Usecase) Logout(ctx context.Context, accessToken, refreshToken string,
 
 	go func(e chan error) {
 		defer uc.wg.Done()
-		if err := uc.authCacheRepo.AddRefreshTokenToBlacklist(ctx, rtc.AccountID, refreshToken, rtRemaining); err != nil {
+		if err := uc.authCacheRepo.AddRefreshTokenToBlacklist(ctx, rtc.AccountID.String(), refreshToken, rtRemaining); err != nil {
 			e := errs.Newf(errs.Internal, "failed to add refresh token to blacklist: %v", err)
 			uc.log.Error(e.Debug())
 			chanErrs <- e
@@ -160,7 +160,7 @@ func (uc *Usecase) Refresh(ctx context.Context, refreshToken, accountID string) 
 	}
 
 	at, err := tokenutil.GenerateAccess(uc.conf, tokenutil.AccessTokenPayload{
-		AccountID: account.ID.String(),
+		AccountID: account.ID,
 		Email:     account.Email,
 		Role:      account.Role,
 	})

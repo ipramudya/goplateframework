@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/goplateframework/config"
 )
 
@@ -19,13 +20,13 @@ var (
 )
 
 type AccessTokenPayload struct {
-	Email     string `json:"email"`
-	Role      string `json:"role"`
-	AccountID string `json:"account_id"`
+	Email     string    `json:"email"`
+	Role      string    `json:"role"`
+	AccountID uuid.UUID `json:"account_id"`
 }
 
 type RefreshTokenPayload struct {
-	AccountID string `json:"account_id"`
+	AccountID uuid.UUID `json:"account_id"`
 }
 
 type AccessTokenClaims struct {

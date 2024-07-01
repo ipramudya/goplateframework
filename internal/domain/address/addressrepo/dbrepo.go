@@ -16,7 +16,7 @@ func NewDB(db *sqlx.DB) *repository {
 	return &repository{db}
 }
 
-func (dbrepo repository) Create(ctx context.Context, a *address.AddressDTO) error {
+func (dbrepo *repository) Create(ctx context.Context, a *address.AddressDTO) error {
 	query := `
 	INSERT INTO addresses 
 		(id, street, city, province, postal_code, created_at, updated_at)
@@ -28,7 +28,7 @@ func (dbrepo repository) Create(ctx context.Context, a *address.AddressDTO) erro
 	return err
 }
 
-func (dbrepo repository) GetOne(ctx context.Context, id uuid.UUID) (*address.AddressDTO, error) {
+func (dbrepo *repository) GetOne(ctx context.Context, id uuid.UUID) (*address.AddressDTO, error) {
 	query := `
 	SELECT * FROM addresses
 	WHERE id = $1
@@ -45,7 +45,7 @@ func (dbrepo repository) GetOne(ctx context.Context, id uuid.UUID) (*address.Add
 	return a, nil
 }
 
-func (dbrepo repository) Update(ctx context.Context, na *address.AddressDTO) error {
+func (dbrepo *repository) Update(ctx context.Context, na *address.AddressDTO) error {
 	query := `
 	UPDATE
 		addresses
@@ -66,7 +66,7 @@ func (dbrepo repository) Update(ctx context.Context, na *address.AddressDTO) err
 	return nil
 }
 
-func (dbrepo repository) Delete(ctx context.Context, id uuid.UUID) error {
+func (dbrepo *repository) Delete(ctx context.Context, id uuid.UUID) error {
 	query := `
 	DELETE FROM addresses
 	WHERE id = $1

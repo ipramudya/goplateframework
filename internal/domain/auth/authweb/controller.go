@@ -85,7 +85,7 @@ func (con *controller) refreshToken(c echo.Context) error {
 		return c.JSON(e.HTTPStatus(), e)
 	}
 
-	account, err := con.authUC.Refresh(c.Request().Context(), rt, claims.AccountID)
+	account, err := con.authUC.Refresh(c.Request().Context(), rt, claims.AccountID.String())
 
 	if err != nil {
 		return c.JSON(err.(*errs.Error).HTTPStatus(), err)

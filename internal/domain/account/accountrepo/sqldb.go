@@ -15,7 +15,7 @@ func NewDB(db *sqlx.DB) *repository {
 	return &repository{db}
 }
 
-func (repo repository) GetOneByEmail(ctx context.Context, email string) (*account.Schema, error) {
+func (repo *repository) GetOneByEmail(ctx context.Context, email string) (*account.Schema, error) {
 	account := new(account.Schema)
 
 	q := `
@@ -30,7 +30,7 @@ func (repo repository) GetOneByEmail(ctx context.Context, email string) (*accoun
 	return account, nil
 }
 
-func (repo repository) GetOneByID(ctx context.Context, id string) (*account.Schema, error) {
+func (repo *repository) GetOneByID(ctx context.Context, id string) (*account.Schema, error) {
 	account := new(account.Schema)
 
 	q := `
@@ -45,7 +45,7 @@ func (repo repository) GetOneByID(ctx context.Context, id string) (*account.Sche
 	return account, nil
 }
 
-func (repo repository) Register(ctx context.Context, na *account.NewAccouuntDTO) (*account.Schema, error) {
+func (repo *repository) Register(ctx context.Context, na *account.NewAccouuntDTO) (*account.Schema, error) {
 	account := new(account.Schema)
 
 	q := `
@@ -64,7 +64,7 @@ func (repo repository) Register(ctx context.Context, na *account.NewAccouuntDTO)
 	return account, nil
 }
 
-func (repo repository) ChangePassword(ctx context.Context, email, password string) error {
+func (repo *repository) ChangePassword(ctx context.Context, email, password string) error {
 	q := `
 	UPDATE accounts
 	SET password=$1, updated_at = CURRENT_TIMESTAMP
