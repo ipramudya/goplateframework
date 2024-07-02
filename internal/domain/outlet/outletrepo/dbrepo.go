@@ -1,7 +1,6 @@
 package outletrepo
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"strings"
@@ -83,55 +82,25 @@ func (dbrepo *repository) Count(ctx context.Context) (int, error) {
 
 func (dbrepo *repository) GetAll(ctx context.Context, qp *outletweb.QueryParams) ([]outlet.OutletDTO, error) {
 	args := map[string]any{
-		"last_id": qp.Filter.LastId,
-		"size":    qp.Page.Size,
+		"size":   qp.Page.Size,
+		"offset": qp.Page.Offset,
 	}
 
-	var query string
-
-	if args["last_id"] == "" {
-		query = `
-		SELECT
-			o.*, a.street, a.city, a.province, a.postal_code 
+	var qb strings.Builder
+	qb.WriteString(`
+		SELECT 
+			o.*, a.street, a.city, a.province, a.postal_code
 		FROM 
 			outlets o
-		INNER JOIN addresses a 
+		INNER JOIN addresses a
 			ON o.address_id = a.id
-		{filter}
-		{order_by}
-		LIMIT :size`
-	} else {
-		query = `
-		SELECT * FROM (
-			SELECT 
-				o.*, a.street, a.city, a.province, a.postal_code 
-			FROM 
-				outlets o
-			INNER JOIN addresses a
-				ON o.address_id = a.id
-			WHERE 
-				o.created_at < (
-					SELECT created_at FROM outlets
-					WHERE id = :last_id
-				)
-			ORDER BY o.created_at DESC
-			LIMIT :size
-		) AS o
-		{filter}
-		{order_by}`
-	}
+	`)
 
-	queryByte := []byte(query)
+	qb.WriteString(dbrepo.buildFilter(args, qp))
+	qb.WriteString(fmt.Sprintf(" ORDER BY o.%s %s", qp.OrderBy.Field, qp.OrderBy.Direction))
+	qb.WriteString(" OFFSET :offset LIMIT :size")
 
-	filterByte := dbrepo.useFilter(args, qp)
-	queryByte = bytes.Replace(queryByte, []byte("{filter}"), filterByte, -1)
-
-	orderbyByte := []byte(fmt.Sprintf(" ORDER BY o.%s %s", qp.OrderBy.Field, qp.OrderBy.Direction))
-	queryByte = bytes.Replace(queryByte, []byte("{order_by}"), orderbyByte, -1)
-
-	query = strings.Join(strings.Fields(string(queryByte)), " ")
-
-	rows, err := dbrepo.NamedQueryContext(ctx, query, args)
+	rows, err := dbrepo.NamedQueryContext(ctx, qb.String(), args)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +112,6 @@ func (dbrepo *repository) GetAll(ctx context.Context, qp *outletweb.QueryParams)
 		if err := rows.StructScan(o); err != nil {
 			return nil, err
 		}
-		fmt.Printf("MODEL : %+v\n", o)
 		outlets = append(outlets, *o.intoDTO())
 	}
 

@@ -14,7 +14,6 @@ type UnparsedQueryParams struct {
 	size     string
 	orderBy  string
 	outletId string
-	lastId   string
 	name     string
 }
 
@@ -24,7 +23,6 @@ func getQueryParams(c echo.Context) *UnparsedQueryParams {
 		size:     c.QueryParam("size"),
 		orderBy:  c.QueryParam("order_by"),
 		outletId: c.QueryParam("outlet_id"),
-		lastId:   c.QueryParam("last_id"),
 		name:     c.QueryParam("name"),
 	}
 }
@@ -97,20 +95,6 @@ func (uqp *UnparsedQueryParams) setFilter(qp *QueryParams) error {
 		return errors.New("outlet_id is not valid")
 	}
 	qp.Filter.OutletId = outletId.String()
-
-	if uqp.lastId != "" {
-		if uqp.page == "" && uqp.size == "" {
-			return errors.New("page and size cannot be empty when last_id is set")
-		}
-
-		if lastId, err := uuid.Parse(uqp.lastId); err != nil {
-			return err
-		} else {
-			qp.Filter.LastId = lastId.String()
-		}
-	} else {
-		qp.Filter.LastId = ""
-	}
 
 	qp.Filter.Name = uqp.name
 

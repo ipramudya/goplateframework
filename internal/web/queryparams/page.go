@@ -8,6 +8,7 @@ import (
 
 type Page struct {
 	Number int
+	Offset int
 	Size   int
 }
 
@@ -48,10 +49,14 @@ func ParsePage(pageNumber, pageSize string) (*Page, error) {
 		return nil, fmt.Errorf("page size too big, max is 100")
 	}
 
-	return &Page{Number: number, Size: size}, nil
+	return &Page{
+		Number: number,
+		Size:   size,
+		Offset: (number - 1) * size,
+	}, nil
 }
 
-func IsAllowedPaging(total int, page *Page) bool {
+func (page *Page) CanPaginate(total int) bool {
 	maxPage := int(math.Ceil(float64(total) / float64(page.Size)))
 	return page.Number <= maxPage
 }

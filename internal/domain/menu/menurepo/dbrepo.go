@@ -1,9 +1,9 @@
 package menurepo
 
 import (
-	"bytes"
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/goplateframework/internal/domain/menu"
 	"github.com/goplateframework/internal/domain/menu/menuweb"
@@ -31,51 +31,27 @@ func (dbrepo *repository) Create(ctx context.Context, m *menu.MenuDTO) error {
 
 func (dbrepo *repository) GetAll(ctx context.Context, qp *menuweb.QueryParams) ([]menu.MenuDTO, error) {
 	args := map[string]any{
-		"last_id":   qp.Filter.LastId,
 		"size":      qp.Page.Size,
 		"outlet_id": qp.Filter.OutletId,
+		"offset":    qp.Page.Offset,
 	}
 
-	var query string
-
-	if args["last_id"] == "" {
-		query = `
+	var qb strings.Builder
+	qb.WriteString(`
 		SELECT * FROM menus
-		WHERE outlet_id = :outlet_id`
-	} else {
-		query = `
-		WITH last_data AS (
-			SELECT updated_at FROM menus
-			WHERE id = :last_id
-		)
-		SELECT * FROM (
-			SELECT * FROM menus
-			WHERE 
-				outlet_id = :outlet_id AND updated_at > (SELECT updated_at FROM last_data)
-			ORDER BY updated_at
-			FETCH NEXT :size ROWS ONLY
-		)`
-	}
-
-	queryBuf := bytes.NewBufferString(query)
+		WHERE outlet_id = :outlet_id
+	`)
 
 	if qp.Filter.Name != "" {
-		args["name"] = fmt.Sprintf("%%%s%%", qp.Filter.Name)
-
-		if args["last_id"] == "" {
-			queryBuf.WriteString(" AND name LIKE :name")
-		} else {
-			queryBuf.WriteString(" WHERE name LIKE :name")
-		}
+		qb.WriteString(" AND name LIKE :name")
+		args["name"] = "%" + qp.Filter.Name + "%"
 	}
 
-	queryBuf.WriteString(fmt.Sprintf(" ORDER BY %s %s", qp.OrderBy.Field, qp.OrderBy.Direction))
+	qb.WriteString(fmt.Sprintf(" ORDER BY %s %s", qp.OrderBy.Field, qp.OrderBy.Direction))
+	qb.WriteString(" OFFSET :page LIMIT :size")
 
-	if args["last_id"] == "" {
-		queryBuf.WriteString(" LIMIT :size")
-	}
+	rows, err := dbrepo.NamedQueryContext(ctx, qb.String(), args)
 
-	rows, err := dbrepo.NamedQueryContext(ctx, queryBuf.String(), args)
 	if err != nil {
 		return nil, err
 	}

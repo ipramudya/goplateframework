@@ -10,7 +10,6 @@ import (
 	"github.com/goplateframework/internal/domain/menu"
 	"github.com/goplateframework/internal/domain/menu/menuweb"
 	"github.com/goplateframework/internal/sdk/errs"
-	"github.com/goplateframework/internal/web/queryparams"
 	"github.com/goplateframework/internal/web/result"
 	"github.com/goplateframework/pkg/logger"
 )
@@ -71,7 +70,7 @@ func (uc *Usecase) GetAll(ctx context.Context, qp *menuweb.QueryParams) (*result
 		return nil, e
 	}
 
-	if !queryparams.IsAllowedPaging(total, qp.Page) {
+	if !qp.Page.CanPaginate(total) {
 		e := errs.New(errs.InvalidArgument, errors.New("page requested is out of range"))
 		uc.log.Error(e.Debug())
 		return nil, e
@@ -84,12 +83,7 @@ func (uc *Usecase) GetAll(ctx context.Context, qp *menuweb.QueryParams) (*result
 		return nil, e
 	}
 
-	lastId := ""
-	if len(m) > 0 {
-		lastId = m[len(m)-1].ID.String()
-	}
-
-	return result.New(m, total, qp.Page.Number, qp.Page.Size, lastId), nil
+	return result.New(m, total, qp.Page.Number, qp.Page.Size), nil
 }
 
 func (uc *Usecase) Update(ctx context.Context, nm *menu.NewMenuDTO, id uuid.UUID) (*menu.MenuDTO, error) {

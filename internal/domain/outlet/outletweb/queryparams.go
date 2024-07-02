@@ -4,7 +4,6 @@ import (
 	"errors"
 	"slices"
 
-	"github.com/google/uuid"
 	"github.com/goplateframework/internal/web/queryparams"
 	"github.com/labstack/echo/v4"
 )
@@ -14,7 +13,6 @@ type UnparsedQueryParams struct {
 	page    string
 	size    string
 	orderBy string
-	lastId  string
 	name    string
 	operate string // open | close
 }
@@ -26,7 +24,6 @@ func getQueryParams(c echo.Context) *UnparsedQueryParams {
 		orderBy: c.QueryParam("order_by"),
 		name:    c.QueryParam("name"),
 		operate: c.QueryParam("operate"),
-		lastId:  c.QueryParam("last_id"),
 	}
 }
 
@@ -35,7 +32,6 @@ type QueryParams struct {
 	Page    *queryparams.Page
 	OrderBy *queryparams.OrderBy
 	Filter  struct {
-		LastId  string
 		Name    string
 		Operate string
 	}
@@ -89,26 +85,12 @@ func (uqp *UnparsedQueryParams) setOrderBy(qp *QueryParams) error {
 var operateEnums = []string{"open", "close"}
 
 func (uqp *UnparsedQueryParams) setFilter(qp *QueryParams) error {
-
-	if uqp.lastId != "" {
-		if uqp.page == "" && uqp.size == "" {
-			return errors.New("page and size cannot be empty when last_id is set")
-		}
-
-		if lastId, err := uuid.Parse(uqp.lastId); err != nil {
-			return err
-		} else {
-			qp.Filter.LastId = lastId.String()
-		}
-	} else {
-		qp.Filter.LastId = uqp.lastId
-	}
-
 	if uqp.operate != "" && !slices.Contains(operateEnums, uqp.operate) {
 		return errors.New("operate must be either 'close' or 'open")
 	}
 
 	qp.Filter.Operate = uqp.operate
 	qp.Filter.Name = uqp.name
+
 	return nil
 }
