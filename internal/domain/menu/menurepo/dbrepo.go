@@ -19,13 +19,13 @@ func NewDB(db *sqlx.DB) *repository {
 }
 
 func (dbrepo *repository) Create(ctx context.Context, m *menu.MenuDTO) error {
-	query := `
+	q := `
 	INSERT INTO menus 
 		(id, name, description, price, is_available, image_url, outlet_id, created_at, updated_at)
 	VALUES 
 		(:id, :name, :description, :price, :is_available, :image_url, :outlet_id, :created_at, :updated_at)`
 
-	_, err := dbrepo.NamedExecContext(ctx, query, intoModel(m))
+	_, err := dbrepo.NamedExecContext(ctx, q, intoModel(m))
 	return err
 }
 
@@ -70,7 +70,7 @@ func (dbrepo *repository) GetAll(ctx context.Context, qp *menuweb.QueryParams) (
 }
 
 func (dbrepo *repository) Update(ctx context.Context, nm *menu.MenuDTO) error {
-	query := `
+	q := `
 	UPDATE 
 		menus
 	SET 
@@ -82,12 +82,12 @@ func (dbrepo *repository) Update(ctx context.Context, nm *menu.MenuDTO) error {
 		updated_at = :updated_at
 	WHERE id = :id`
 
-	_, err := dbrepo.NamedExecContext(ctx, query, intoModel(nm))
+	_, err := dbrepo.NamedExecContext(ctx, q, intoModel(nm))
 	return err
 }
 
 func (dbrepo *repository) Count(ctx context.Context, outletId string) (int, error) {
-	query := `
+	q := `
 	SELECT COUNT(*) AS total FROM menus
 	WHERE outlet_id = $1`
 
@@ -95,7 +95,7 @@ func (dbrepo *repository) Count(ctx context.Context, outletId string) (int, erro
 		Total int `db:"total"`
 	}
 
-	err := dbrepo.GetContext(ctx, &count, query, outletId)
+	err := dbrepo.GetContext(ctx, &count, q, outletId)
 	if err != nil {
 		return 0, err
 	}

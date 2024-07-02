@@ -22,7 +22,7 @@ func NewDB(db *sqlx.DB) *repository {
 func (dbrepo *repository) GetOne(ctx context.Context, id uuid.UUID) (*outlet.OutletDTO, error) {
 	oa := new(ModelWithAddress)
 
-	query := `
+	q := `
 	SELECT o.*, a.street, a.city, a.province, a.postal_code 
 		FROM outlets o
 	INNER JOIN addresses a 
@@ -30,7 +30,7 @@ func (dbrepo *repository) GetOne(ctx context.Context, id uuid.UUID) (*outlet.Out
 	WHERE o.id = $1
 	LIMIT 1`
 
-	if err := dbrepo.QueryRowxContext(ctx, query, id).StructScan(oa); err != nil {
+	if err := dbrepo.QueryRowxContext(ctx, q, id).StructScan(oa); err != nil {
 		return nil, err
 	}
 
@@ -38,18 +38,18 @@ func (dbrepo *repository) GetOne(ctx context.Context, id uuid.UUID) (*outlet.Out
 }
 
 func (dbrepo *repository) Create(ctx context.Context, o *outlet.OutletDTO) error {
-	query := `
+	q := `
 	INSERT INTO outlets
 		(name, phone, opening_time, closing_time, address_id, created_at, updated_at)
 	VALUES
 		(:name, :phone, :opening_time, :closing_time, :address_id, :created_at, :updated_at)`
 
-	_, err := dbrepo.NamedExecContext(ctx, query, intoModel(o))
+	_, err := dbrepo.NamedExecContext(ctx, q, intoModel(o))
 	return err
 }
 
 func (dbrepo *repository) Update(ctx context.Context, o *outlet.OutletDTO) error {
-	query := `
+	q := `
 	UPDATE 
 		outlets
 	SET
@@ -60,19 +60,19 @@ func (dbrepo *repository) Update(ctx context.Context, o *outlet.OutletDTO) error
 		updated_at = :updated_at
 	WHERE id = :id`
 
-	_, err := dbrepo.NamedExecContext(ctx, query, intoModel(o))
+	_, err := dbrepo.NamedExecContext(ctx, q, intoModel(o))
 	return err
 }
 
 func (dbrepo *repository) Count(ctx context.Context) (int, error) {
-	query := `
+	q := `
 	SELECT COUNT(*) AS total FROM outlets`
 
 	var count struct {
 		Total int `db:"total"`
 	}
 
-	err := dbrepo.GetContext(ctx, &count, query)
+	err := dbrepo.GetContext(ctx, &count, q)
 	if err != nil {
 		return 0, err
 	}

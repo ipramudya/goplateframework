@@ -17,26 +17,26 @@ func NewDB(db *sqlx.DB) *repository {
 }
 
 func (dbrepo *repository) Create(ctx context.Context, a *address.AddressDTO) error {
-	query := `
+	q := `
 	INSERT INTO addresses 
 		(id, street, city, province, postal_code, created_at, updated_at)
 	VALUES
 		(:id, :street, :city, :province, :postal_code, :created_at, :updated_at)
 	`
 
-	_, err := dbrepo.NamedExecContext(ctx, query, intoModel(a))
+	_, err := dbrepo.NamedExecContext(ctx, q, intoModel(a))
 	return err
 }
 
 func (dbrepo *repository) GetOne(ctx context.Context, id uuid.UUID) (*address.AddressDTO, error) {
-	query := `
+	q := `
 	SELECT * FROM addresses
 	WHERE id = $1
 	LIMIT 1
 	`
 
 	a := new(address.AddressDTO)
-	err := dbrepo.QueryRowContext(ctx, query, id).Scan(a)
+	err := dbrepo.QueryRowContext(ctx, q, id).Scan(a)
 
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (dbrepo *repository) GetOne(ctx context.Context, id uuid.UUID) (*address.Ad
 }
 
 func (dbrepo *repository) Update(ctx context.Context, na *address.AddressDTO) error {
-	query := `
+	q := `
 	UPDATE
 		addresses
 	SET
@@ -58,7 +58,7 @@ func (dbrepo *repository) Update(ctx context.Context, na *address.AddressDTO) er
 	WHERE id = :id
 	`
 
-	_, err := dbrepo.NamedExecContext(ctx, query, intoModel(na))
+	_, err := dbrepo.NamedExecContext(ctx, q, intoModel(na))
 	if err != nil {
 		return err
 	}
@@ -67,11 +67,11 @@ func (dbrepo *repository) Update(ctx context.Context, na *address.AddressDTO) er
 }
 
 func (dbrepo *repository) Delete(ctx context.Context, id uuid.UUID) error {
-	query := `
+	q := `
 	DELETE FROM addresses
 	WHERE id = $1
 	`
 
-	_, err := dbrepo.ExecContext(ctx, query, id)
+	_, err := dbrepo.ExecContext(ctx, q, id)
 	return err
 }

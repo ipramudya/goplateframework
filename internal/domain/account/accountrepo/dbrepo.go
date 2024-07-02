@@ -19,13 +19,13 @@ func NewDB(db *sqlx.DB) *repository {
 func (dbrepo *repository) GetOneByEmail(ctx context.Context, email string) (*account.AccountDTO, error) {
 	a := new(Model)
 
-	query := `
+	q := `
 	SELECT * FROM accounts
 	WHERE email = $1
 	LIMIT 1
 	`
 
-	if err := dbrepo.QueryRowxContext(ctx, query, email).StructScan(a); err != nil {
+	if err := dbrepo.QueryRowxContext(ctx, q, email).StructScan(a); err != nil {
 		return nil, err
 	}
 
@@ -35,13 +35,13 @@ func (dbrepo *repository) GetOneByEmail(ctx context.Context, email string) (*acc
 func (dbrepo *repository) GetOne(ctx context.Context, id uuid.UUID) (*account.AccountDTO, error) {
 	a := new(Model)
 
-	query := `
+	q := `
 	SELECT * FROM accounts
 	WHERE id = $1
 	LIMIT 1
 	`
 
-	if err := dbrepo.QueryRowxContext(ctx, query, id).StructScan(a); err != nil {
+	if err := dbrepo.QueryRowxContext(ctx, q, id).StructScan(a); err != nil {
 		return nil, err
 	}
 
@@ -49,22 +49,22 @@ func (dbrepo *repository) GetOne(ctx context.Context, id uuid.UUID) (*account.Ac
 }
 
 func (dbrepo *repository) Create(ctx context.Context, a *account.AccountDTO) error {
-	query := `
+	q := `
 	INSERT INTO accounts
 		(id, firstname, lastname, email, password, phone, role, created_at, updated_at)
 	VALUES
 		(:id, :firstname, :lastname, :email, :password, :phone, :role, :created_at, :updated_at)`
 
-	_, err := dbrepo.NamedExecContext(ctx, query, intoModel(a))
+	_, err := dbrepo.NamedExecContext(ctx, q, intoModel(a))
 	return err
 }
 
 func (repo *repository) ChangePassword(ctx context.Context, email, password string) error {
-	query := `
+	q := `
 	UPDATE accounts
 	SET password = $1
 	WHERE email = $2`
 
-	_, err := repo.ExecContext(ctx, query, password, email)
+	_, err := repo.ExecContext(ctx, q, password, email)
 	return err
 }
