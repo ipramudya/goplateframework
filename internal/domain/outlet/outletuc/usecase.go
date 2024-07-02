@@ -4,20 +4,26 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/goplateframework/config"
 	"github.com/goplateframework/internal/domain/address"
 	"github.com/goplateframework/internal/domain/outlet"
+	"github.com/goplateframework/internal/domain/outlet/outletweb"
 	"github.com/goplateframework/internal/sdk/errs"
+	"github.com/goplateframework/internal/web/queryparams"
+	"github.com/goplateframework/internal/web/result"
 	"github.com/goplateframework/pkg/logger"
 )
 
 type iRepository interface {
+	GetAll(ctx context.Context, qp *outletweb.QueryParams) ([]outlet.OutletDTO, error)
 	GetOne(ctx context.Context, id uuid.UUID) (*outlet.OutletDTO, error)
 	Create(ctx context.Context, a *outlet.OutletDTO) error
 	Update(ctx context.Context, o *outlet.OutletDTO) error
+	Count(ctx context.Context) (int, error)
 }
 
 type Usecase struct {
@@ -55,6 +61,36 @@ func (uc *Usecase) Create(ctx context.Context, no *outlet.NewOutletDTO) (*outlet
 	}
 
 	return o, nil
+}
+
+func (uc *Usecase) GetAll(ctx context.Context, qp *outletweb.QueryParams) (*result.Result[outlet.OutletDTO], error) {
+	total, err := uc.repo.Count(ctx)
+	if err != nil {
+		e := errs.New(errs.Internal, errors.New("something went wrong"))
+		uc.log.Error(e.DebugWithDetail(err.Error()))
+		return nil, e
+	}
+
+	if !queryparams.IsAllowedPaging(total, qp.Page) {
+		e := errs.New(errs.InvalidArgument, errors.New("page requested is out of range"))
+		uc.log.Error(e.Debug())
+		return nil, e
+	}
+
+	o, err := uc.repo.GetAll(ctx, qp)
+	if err != nil {
+		e := errs.New(errs.Internal, errors.New("something went wrong"))
+		fmt.Printf("ERROR: %v", err)
+		uc.log.Error(e.DebugWithDetail(err.Error()))
+		return nil, e
+	}
+
+	lastId := ""
+	if len(o) > 0 {
+		lastId = o[len(o)-1].ID.String()
+	}
+
+	return result.New(o, total, qp.Page.Number, qp.Page.Size, lastId), nil
 }
 
 func (uc *Usecase) GetOne(ctx context.Context, id uuid.UUID) (*outlet.OutletDTO, error) {

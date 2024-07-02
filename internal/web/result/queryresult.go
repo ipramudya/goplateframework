@@ -12,6 +12,10 @@ type Result[T any] struct {
 }
 
 func New[T any](items []T, total, page, size int, lastId string) *Result[T] {
+	if items == nil {
+		items = []T{}
+	}
+
 	return &Result[T]{
 		Items:   items,
 		Total:   total,

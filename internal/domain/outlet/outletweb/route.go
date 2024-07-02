@@ -14,8 +14,9 @@ type Options struct {
 func Route(web *web.Web, opts *Options) {
 	con := newController(opts.AddressUC, opts.OutletUC, opts.Log)
 
-	g := web.Echo.Group("/api/v1/new-outlet", web.Mid.Authenticated)
-	g.POST("", con.create)
+	g := web.Echo.Group("/api/v1/outlet", web.Mid.Authenticated)
+	g.GET("", con.getAll)
 	g.GET("/:id", con.getOne)
+	g.POST("", con.create)
 	g.PUT("/:id", con.update)
 }

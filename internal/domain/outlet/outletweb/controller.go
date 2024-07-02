@@ -9,6 +9,7 @@ import (
 	"github.com/goplateframework/internal/domain/address"
 	"github.com/goplateframework/internal/domain/outlet"
 	"github.com/goplateframework/internal/sdk/errs"
+	"github.com/goplateframework/internal/web/result"
 	"github.com/goplateframework/pkg/logger"
 	"github.com/labstack/echo/v4"
 )
@@ -20,8 +21,9 @@ type iAddressUsecase interface {
 }
 
 type iOutletUsecase interface {
-	Create(ctx context.Context, no *outlet.NewOutletDTO) (*outlet.OutletDTO, error)
+	GetAll(ctx context.Context, qp *QueryParams) (*result.Result[outlet.OutletDTO], error)
 	GetOne(ctx context.Context, id uuid.UUID) (*outlet.OutletDTO, error)
+	Create(ctx context.Context, no *outlet.NewOutletDTO) (*outlet.OutletDTO, error)
 	Update(ctx context.Context, no *outlet.NewOutletDTO, id uuid.UUID) (*outlet.OutletDTO, error)
 }
 
@@ -72,6 +74,23 @@ func (con *controller) create(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, o)
+}
+
+func (con *controller) getAll(c echo.Context) error {
+	qp, err := getQueryParams(c).Parse()
+
+	if err != nil {
+		e := errs.Newf(errs.InvalidArgument, "invalid request: %v", err)
+		con.log.Error(e.Debug())
+		return c.JSON(e.HTTPStatus(), e)
+	}
+
+	o, err := con.outletUC.GetAll(c.Request().Context(), qp)
+	if err != nil {
+		return c.JSON(err.(*errs.Error).HTTPStatus(), err)
+	}
+
+	return c.JSON(http.StatusOK, o)
 }
 
 func (con *controller) getOne(c echo.Context) error {

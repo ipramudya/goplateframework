@@ -13,6 +13,6 @@ type Options struct {
 func Route(web *web.Web, opts *Options) {
 	con := newController(opts.AddressUC, opts.Log)
 
-	g := web.Echo.Group("/api/v1/new-address", web.Mid.Authenticated)
+	g := web.Echo.Group("/api/v1/address", web.Mid.Authenticated)
 	g.PUT("/:id", con.update)
 }
