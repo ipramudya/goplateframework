@@ -117,3 +117,12 @@ func (dbrepo *repository) GetAll(ctx context.Context, qp *outletweb.QueryParams)
 
 	return outlets, nil
 }
+
+func (dbrepo *repository) Delete(ctx context.Context, id uuid.UUID) error {
+	q := `
+	DELETE FROM outlets
+	WHERE id = $1`
+
+	_, err := dbrepo.ExecContext(ctx, q, id)
+	return err
+}

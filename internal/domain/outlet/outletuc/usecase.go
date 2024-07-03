@@ -21,6 +21,7 @@ type iRepository interface {
 	GetOne(ctx context.Context, id uuid.UUID) (*outlet.OutletDTO, error)
 	Create(ctx context.Context, a *outlet.OutletDTO) error
 	Update(ctx context.Context, o *outlet.OutletDTO) error
+	Delete(ctx context.Context, id uuid.UUID) error
 	Count(ctx context.Context) (int, error)
 }
 
@@ -128,4 +129,16 @@ func (uc *Usecase) Update(ctx context.Context, no *outlet.NewOutletDTO, id uuid.
 	}
 
 	return oa, nil
+}
+
+func (uc *Usecase) Delete(ctx context.Context, id uuid.UUID) error {
+	err := uc.repo.Delete(ctx, id)
+
+	if err != nil {
+		e := errs.New(errs.Internal, errors.New("something went wrong"))
+		uc.log.Error(e.DebugWithDetail(err.Error()))
+		return e
+	}
+
+	return nil
 }

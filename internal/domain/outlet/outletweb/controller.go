@@ -25,6 +25,7 @@ type iOutletUsecase interface {
 	GetOne(ctx context.Context, id uuid.UUID) (*outlet.OutletDTO, error)
 	Create(ctx context.Context, no *outlet.NewOutletDTO) (*outlet.OutletDTO, error)
 	Update(ctx context.Context, no *outlet.NewOutletDTO, id uuid.UUID) (*outlet.OutletDTO, error)
+	Delete(ctx context.Context, id uuid.UUID) error
 }
 
 type controller struct {
@@ -139,4 +140,20 @@ func (con *controller) update(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, o)
+}
+
+func (con *controller) delete(c echo.Context) error {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		e := errs.Newf(errs.InvalidArgument, "invalid id: %v", err)
+		con.log.Error(e.Debug())
+		return c.JSON(e.HTTPStatus(), e)
+	}
+
+	err = con.outletUC.Delete(c.Request().Context(), id)
+	if err != nil {
+		return c.JSON(err.(*errs.Error).HTTPStatus(), err)
+	}
+
+	return c.NoContent(http.StatusNoContent)
 }

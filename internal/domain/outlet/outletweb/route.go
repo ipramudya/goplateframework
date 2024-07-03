@@ -19,4 +19,5 @@ func Route(web *web.Web, opts *Options) {
 	g.GET("/:id", con.getOne)
 	g.POST("", con.create)
 	g.PUT("/:id", con.update)
+	g.DELETE("/:id", con.delete)
 }
