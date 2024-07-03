@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/goplateframework/internal/domain/menu"
 	"github.com/goplateframework/internal/domain/menu/menuweb"
 	"github.com/jmoiron/sqlx"
@@ -83,6 +84,15 @@ func (dbrepo *repository) Update(ctx context.Context, nm *menu.MenuDTO) error {
 	WHERE id = :id`
 
 	_, err := dbrepo.NamedExecContext(ctx, q, intoModel(nm))
+	return err
+}
+
+func (dbrepo *repository) Delete(ctx context.Context, id uuid.UUID) error {
+	q := `
+	DELETE FROM menus
+	WHERE id = $1`
+
+	_, err := dbrepo.ExecContext(ctx, q, id)
 	return err
 }
 

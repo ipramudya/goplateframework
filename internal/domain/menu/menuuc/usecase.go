@@ -19,6 +19,7 @@ type iRepository interface {
 	Create(ctx context.Context, nm *menu.MenuDTO) error
 	GetAll(ctx context.Context, qp *menuweb.QueryParams) ([]menu.MenuDTO, error)
 	Update(ctx context.Context, nm *menu.MenuDTO) error
+	Delete(ctx context.Context, id uuid.UUID) error
 	Count(ctx context.Context, outletId string) (int, error)
 }
 
@@ -107,4 +108,16 @@ func (uc *Usecase) Update(ctx context.Context, nm *menu.NewMenuDTO, id uuid.UUID
 	}
 
 	return m, nil
+}
+
+func (uc *Usecase) Delete(ctx context.Context, id uuid.UUID) error {
+	err := uc.menuDBRepo.Delete(ctx, id)
+
+	if err != nil {
+		e := errs.New(errs.Internal, errors.New("something went wrong"))
+		uc.log.Error(e.DebugWithDetail(err.Error()))
+		return e
+	}
+
+	return nil
 }

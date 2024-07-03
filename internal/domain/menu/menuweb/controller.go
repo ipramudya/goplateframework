@@ -18,6 +18,7 @@ type iUsecase interface {
 	Create(ctx context.Context, nm *menu.NewMenuDTO) (*menu.MenuDTO, error)
 	GetAll(ctx context.Context, qp *QueryParams) (*result.Result[menu.MenuDTO], error)
 	Update(ctx context.Context, nm *menu.NewMenuDTO, id uuid.UUID) (*menu.MenuDTO, error)
+	Delete(ctx context.Context, id uuid.UUID) error
 }
 
 type controller struct {
@@ -97,4 +98,21 @@ func (con *controller) update(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, m)
+}
+
+func (con *controller) delete(c echo.Context) error {
+
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		e := errs.Newf(errs.InvalidArgument, "invalid id: %v", err)
+		con.log.Error(e.Debug())
+		return c.JSON(e.HTTPStatus(), e)
+	}
+
+	err = con.menuUC.Delete(c.Request().Context(), id)
+	if err != nil {
+		return c.JSON(err.(*errs.Error).HTTPStatus(), err)
+	}
+
+	return c.NoContent(http.StatusOK)
 }
