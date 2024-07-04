@@ -28,7 +28,7 @@ func Handler(conf *Config) http.Handler {
 	w.EnableGlobalMware()
 
 	// remap all routes to the web application
-	routes(w, conf)
+	router(w, conf)
 
 	return w
 }

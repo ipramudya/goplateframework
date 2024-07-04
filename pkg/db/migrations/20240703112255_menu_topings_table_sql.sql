@@ -11,7 +11,6 @@ CREATE TABLE IF NOT EXISTS
         is_available    boolean                     NOT NULL    DEFAULT false,
         image_url       varchar(255)                NULL        DEFAULT '',
         stock           integer                     NOT NULL    DEFAULT 0,
-        topping_id      uuid                        NOT NULL,
         created_at      TIMESTAMP WITH TIME ZONE    NOT NULL    DEFAULT CURRENT_TIMESTAMP,
         updated_at      TIMESTAMP WITH TIME ZONE    NOT NULL    DEFAULT CURRENT_TIMESTAMP,
         menu_id         uuid                        NOT NULL,

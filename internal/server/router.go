@@ -13,13 +13,16 @@ import (
 	"github.com/goplateframework/internal/domain/menu/menurepo"
 	"github.com/goplateframework/internal/domain/menu/menuuc"
 	"github.com/goplateframework/internal/domain/menu/menuweb"
+	"github.com/goplateframework/internal/domain/menutoping/menutopingrepo"
+	"github.com/goplateframework/internal/domain/menutoping/menutopinguc"
+	"github.com/goplateframework/internal/domain/menutoping/menutopingweb"
 	"github.com/goplateframework/internal/domain/outlet/outletrepo"
 	"github.com/goplateframework/internal/domain/outlet/outletuc"
 	"github.com/goplateframework/internal/domain/outlet/outletweb"
 	"github.com/goplateframework/internal/web"
 )
 
-func routes(w *web.Web, conf *Config) {
+func router(w *web.Web, conf *Config) {
 	accountDBRepo := accountrepo.NewDB(conf.DB)
 	accountCacheRepo := accountrepo.NewCache(conf.RDB)
 	accountUC := accountuc.New(conf.ServConf, conf.Log, accountDBRepo, accountCacheRepo)
@@ -35,13 +38,6 @@ func routes(w *web.Web, conf *Config) {
 		AuthUC: authUC,
 	})
 
-	menuDBRepo := menurepo.NewDB(conf.DB)
-	menuUC := menuuc.New(conf.ServConf, conf.Log, menuDBRepo)
-	menuweb.Route(w, &menuweb.Options{
-		Log:    conf.Log,
-		MenuUC: menuUC,
-	})
-
 	addressDBRepo := addressrepo.NewDB(conf.DB)
 	addressUC := addressuc.New(conf.ServConf, conf.Log, addressDBRepo)
 	addressweb.Route(w, &addressweb.Options{
@@ -55,5 +51,19 @@ func routes(w *web.Web, conf *Config) {
 		AddressUC: addressUC,
 		OutletUC:  outletUC,
 		Log:       conf.Log,
+	})
+
+	menuDBRepo := menurepo.NewDB(conf.DB)
+	menuUC := menuuc.New(conf.ServConf, conf.Log, menuDBRepo)
+	menuweb.Route(w, &menuweb.Options{
+		Log:    conf.Log,
+		MenuUC: menuUC,
+	})
+
+	menuTopingDBRepo := menutopingrepo.NewDB(conf.DB)
+	menuTopingUC := menutopinguc.New(conf.ServConf, conf.Log, menuTopingDBRepo)
+	menutopingweb.Route(w, &menutopingweb.Options{
+		Log:          conf.Log,
+		MenuTopingUC: menuTopingUC,
 	})
 }

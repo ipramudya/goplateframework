@@ -52,9 +52,7 @@ func (uc *Usecase) Create(ctx context.Context, nm *menu.NewMenuDTO) (*menu.MenuD
 		UpdatedAt:   now,
 	}
 
-	err := uc.menuDBRepo.Create(ctx, m)
-
-	if err != nil {
+	if err := uc.menuDBRepo.Create(ctx, m); err != nil {
 		e := errs.New(errs.Internal, errors.New("something went wrong"))
 		uc.log.Errorf(e.DebugWithDetail(err.Error()))
 		return nil, e
@@ -99,9 +97,7 @@ func (uc *Usecase) Update(ctx context.Context, nm *menu.NewMenuDTO, id uuid.UUID
 		UpdatedAt:   time.Now(),
 	}
 
-	err := uc.menuDBRepo.Update(ctx, m)
-
-	if err != nil {
+	if err := uc.menuDBRepo.Update(ctx, m); err != nil {
 		e := errs.New(errs.Internal, errors.New("something went wrong"))
 		uc.log.Error(e.DebugWithDetail(err.Error()))
 		return nil, e
@@ -111,9 +107,7 @@ func (uc *Usecase) Update(ctx context.Context, nm *menu.NewMenuDTO, id uuid.UUID
 }
 
 func (uc *Usecase) Delete(ctx context.Context, id uuid.UUID) error {
-	err := uc.menuDBRepo.Delete(ctx, id)
-
-	if err != nil {
+	if err := uc.menuDBRepo.Delete(ctx, id); err != nil {
 		e := errs.New(errs.Internal, errors.New("something went wrong"))
 		uc.log.Error(e.DebugWithDetail(err.Error()))
 		return e
