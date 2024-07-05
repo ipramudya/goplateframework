@@ -49,7 +49,7 @@ func (dbrepo *repository) GetAll(ctx context.Context, qp *menuweb.QueryParams) (
 	}
 
 	qb.WriteString(fmt.Sprintf(" ORDER BY %s %s", qp.OrderBy.Field, qp.OrderBy.Direction))
-	qb.WriteString(" OFFSET :page LIMIT :size")
+	qb.WriteString(" OFFSET :offset LIMIT :size")
 
 	rows, err := dbrepo.NamedQueryContext(ctx, qb.String(), args)
 

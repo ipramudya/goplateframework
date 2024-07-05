@@ -11,6 +11,7 @@ import (
 	"github.com/goplateframework/internal/domain/menu/menuweb"
 	"github.com/goplateframework/internal/sdk/errs"
 	"github.com/goplateframework/internal/web/result"
+	"github.com/goplateframework/internal/worker/pb"
 	"github.com/goplateframework/pkg/logger"
 )
 
@@ -27,26 +28,29 @@ type Usecase struct {
 	conf       *config.Config
 	log        *logger.Log
 	menuDBRepo iRepository
+	worker     pb.WorkerClient
 }
 
-func New(conf *config.Config, log *logger.Log, menuDBRepo iRepository) *Usecase {
+func New(conf *config.Config, log *logger.Log, worker pb.WorkerClient, menuDBRepo iRepository) *Usecase {
 	return &Usecase{
 		conf:       conf,
 		log:        log,
 		menuDBRepo: menuDBRepo,
+		worker:     worker,
 	}
 }
 
-func (uc *Usecase) Create(ctx context.Context, nm *menu.NewMenuDTO) (*menu.MenuDTO, error) {
+func (uc *Usecase) Create(ctx context.Context, nm *menu.NewMenuDTO, menuImage []byte) (*menu.MenuDTO, error) {
 	now := time.Now()
 
+	id := uuid.New()
 	m := &menu.MenuDTO{
-		ID:          uuid.New(),
+		ID:          id,
 		Name:        nm.Name,
 		Description: nm.Description,
 		Price:       nm.Price,
 		IsAvailable: nm.IsAvailable,
-		ImageURL:    "",
+		ImageURL:    "pending",
 		OutletID:    nm.OutletID,
 		CreatedAt:   now,
 		UpdatedAt:   now,
@@ -57,6 +61,21 @@ func (uc *Usecase) Create(ctx context.Context, nm *menu.NewMenuDTO) (*menu.MenuD
 		uc.log.Errorf(e.DebugWithDetail(err.Error()))
 		return nil, e
 	}
+
+	go func() {
+		workerCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		_, err := uc.worker.ProcessImage(workerCtx, &pb.ProcessImageRequest{
+			Id:        id.String(),
+			Table:     "menus",
+			ImageData: menuImage,
+		})
+
+		if err != nil {
+			uc.log.Error(err.Error())
+		}
+	}()
 
 	return m, nil
 }

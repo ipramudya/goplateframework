@@ -11,7 +11,9 @@ import (
 
 	"github.com/goplateframework/config"
 	"github.com/goplateframework/internal/server"
+	"github.com/goplateframework/internal/worker/pb"
 	"github.com/goplateframework/pkg/db"
+	"github.com/goplateframework/pkg/grpcclient"
 	"github.com/goplateframework/pkg/logger"
 	"github.com/goplateframework/pkg/redisdb"
 )
@@ -69,6 +71,16 @@ func run(ctx context.Context, conf *config.Config, log *logger.Log) error {
 
 	log.Infof("starting server on port: %s", conf.Server.Port)
 
+	// make grpc client caller
+	grpcconn, err := grpcclient.Init(conf)
+	if err != nil {
+		log.Fatalf("grpc client error, %v", err)
+		return err
+	} else {
+		log.Info("grpc client connected")
+	}
+	defer grpcconn.Close()
+
 	// channel to receive shutdown signal, for graceful shutdown
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
@@ -79,6 +91,7 @@ func run(ctx context.Context, conf *config.Config, log *logger.Log) error {
 		RDB:      rdb,
 		Log:      log,
 		ServConf: conf,
+		Worker:   pb.NewWorkerClient(grpcconn),
 	}
 
 	// create http server, pass server configuration to server handler

@@ -9,10 +9,12 @@ import (
 )
 
 type Config struct {
-	Server ServerConfig
-	DB     PostgresConfig
-	RDB    RedisConfig
-	Logger Logger
+	Server   ServerConfig
+	DB       PostgresConfig
+	RDB      RedisConfig
+	Logger   Logger
+	RPC      RPC
+	Firebase Firebase
 }
 
 type ServerConfig struct {
@@ -53,6 +55,15 @@ type PostgresConfig struct {
 	EndpointID       string
 }
 
+type RPC struct {
+	Port string
+}
+
+type Firebase struct {
+	Path       string
+	BucketName string
+}
+
 type RedisConfig struct {
 	Url string
 }
@@ -60,7 +71,7 @@ type RedisConfig struct {
 func LoadConfig() (*viper.Viper, error) {
 	v := viper.New()
 
-	v.AddConfigPath("./config")
+	v.AddConfigPath("./config/priv")
 	v.SetConfigName("configcloud")
 	v.SetConfigType("json")
 

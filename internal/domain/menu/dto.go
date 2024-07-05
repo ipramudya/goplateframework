@@ -23,12 +23,11 @@ type MenuDTO struct {
 
 // NewMenuDTO is what client should send to create new menu
 type NewMenuDTO struct {
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	Price       float64 `json:"price"`
-	IsAvailable bool    `json:"is_available"`
-	OutletID    string  `json:"outlet_id"`
-	// ImageURL    string  `json:"image_url"`
+	Name        string  `json:"name" form:"name"`
+	Description string  `json:"description" form:"description"`
+	Price       float64 `json:"price" form:"price"`
+	IsAvailable bool    `json:"is_available" form:"is_available"`
+	OutletID    string  `json:"outlet_id" form:"outlet_id"`
 }
 
 func (m NewMenuDTO) Validate() error {

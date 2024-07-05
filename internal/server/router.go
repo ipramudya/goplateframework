@@ -54,7 +54,7 @@ func router(w *web.Web, conf *Config) {
 	})
 
 	menuDBRepo := menurepo.NewDB(conf.DB)
-	menuUC := menuuc.New(conf.ServConf, conf.Log, menuDBRepo)
+	menuUC := menuuc.New(conf.ServConf, conf.Log, conf.Worker, menuDBRepo)
 	menuweb.Route(w, &menuweb.Options{
 		Log:    conf.Log,
 		MenuUC: menuUC,

@@ -2,10 +2,12 @@ package menuweb
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/goplateframework/internal/sdk/errs"
+	"github.com/goplateframework/internal/web/formfile"
 	"github.com/goplateframework/internal/web/result"
 	"github.com/goplateframework/pkg/logger"
 	"github.com/labstack/echo/v4"
@@ -15,7 +17,7 @@ import (
 
 // required usecase methods which this controller needs to operate the business logic
 type iUsecase interface {
-	Create(ctx context.Context, nm *menu.NewMenuDTO) (*menu.MenuDTO, error)
+	Create(ctx context.Context, nm *menu.NewMenuDTO, menuImage []byte) (*menu.MenuDTO, error)
 	GetAll(ctx context.Context, qp *QueryParams) (*result.Result[menu.MenuDTO], error)
 	Update(ctx context.Context, nm *menu.NewMenuDTO, id uuid.UUID) (*menu.MenuDTO, error)
 	Delete(ctx context.Context, id uuid.UUID) error
@@ -45,7 +47,27 @@ func (con *controller) create(c echo.Context) error {
 		return c.JSON(e.HTTPStatus(), e)
 	}
 
-	m, err := con.menuUC.Create(c.Request().Context(), nm)
+	file, err := c.FormFile("image")
+	if err != nil {
+		e := errs.Newf(errs.InvalidArgument, "invalid request: %v", err)
+		con.log.Error(e.Debug())
+		return c.JSON(e.HTTPStatus(), e)
+	}
+
+	if file == nil {
+		e := errs.New(errs.InvalidArgument, errors.New("invalid request: image is required"))
+		con.log.Error(e.Debug())
+		return c.JSON(e.HTTPStatus(), e)
+	}
+
+	menuImage, err := formfile.Parse(file)
+	if err != nil {
+		e := errs.New(errs.Internal, errors.New("something went wrong"))
+		con.log.Error(e.Debug())
+		return c.JSON(e.HTTPStatus(), e)
+	}
+
+	m, err := con.menuUC.Create(c.Request().Context(), nm, menuImage)
 	if err != nil {
 		return c.JSON(err.(*errs.Error).HTTPStatus(), err)
 	}

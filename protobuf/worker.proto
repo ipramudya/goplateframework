@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option go_package = "internal/worker/pb";
+
+package worker;
+
+service Worker {
+    rpc ProcessImage(ProcessImageRequest) returns (ProcessImageResponse) {}
+};
+
+message ProcessImageRequest {
+    string table = 1;
+    string id = 2;
+    bytes image_data = 3;
+}
+
+message ProcessImageResponse {
+    bool success = 1;
+    string message = 2;
+    string image_url = 3;
+}

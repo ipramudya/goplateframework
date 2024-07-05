@@ -5,6 +5,7 @@ import (
 
 	"github.com/goplateframework/config"
 	"github.com/goplateframework/internal/web"
+	"github.com/goplateframework/internal/worker/pb"
 	"github.com/goplateframework/pkg/logger"
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
@@ -15,6 +16,7 @@ type Config struct {
 	RDB      *redis.Client
 	Log      *logger.Log
 	ServConf *config.Config
+	Worker   pb.WorkerClient
 }
 
 func Handler(conf *Config) http.Handler {

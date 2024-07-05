@@ -1,6 +1,2 @@
-test_suite_analysis/*
-managed_context/*
 tmp/*
-config/goose/*
-configdev.json
-configcloud.json
+config/priv/*
