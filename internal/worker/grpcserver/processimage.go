@@ -24,7 +24,7 @@ const (
 	FirebaseStorageDomain string = "https://storage.googleapis.com"
 )
 
-func (s *server) ProcessImage(ctx context.Context, req *pb.ProcessImageRequest) (*pb.ProcessImageResponse, error) {
+func (s *server) ProcessImage(ctx context.Context, req *pb.ProcessImageRequest) (*pb.Empty, error) {
 	now := time.Now()
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 
@@ -50,11 +50,7 @@ func (s *server) ProcessImage(ctx context.Context, req *pb.ProcessImageRequest) 
 		return nil, err
 	}
 
-	return &pb.ProcessImageResponse{
-		Success:  true,
-		Message:  "Success",
-		ImageUrl: imageUrl,
-	}, nil
+	return &pb.Empty{}, nil
 }
 
 func (s *server) optimize(imageData []byte) ([]byte, error) {

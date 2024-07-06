@@ -26,7 +26,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type WorkerClient interface {
-	ProcessImage(ctx context.Context, in *ProcessImageRequest, opts ...grpc.CallOption) (*ProcessImageResponse, error)
+	ProcessImage(ctx context.Context, in *ProcessImageRequest, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type workerClient struct {
@@ -37,9 +37,9 @@ func NewWorkerClient(cc grpc.ClientConnInterface) WorkerClient {
 	return &workerClient{cc}
 }
 
-func (c *workerClient) ProcessImage(ctx context.Context, in *ProcessImageRequest, opts ...grpc.CallOption) (*ProcessImageResponse, error) {
+func (c *workerClient) ProcessImage(ctx context.Context, in *ProcessImageRequest, opts ...grpc.CallOption) (*Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ProcessImageResponse)
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, Worker_ProcessImage_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func (c *workerClient) ProcessImage(ctx context.Context, in *ProcessImageRequest
 // All implementations must embed UnimplementedWorkerServer
 // for forward compatibility
 type WorkerServer interface {
-	ProcessImage(context.Context, *ProcessImageRequest) (*ProcessImageResponse, error)
+	ProcessImage(context.Context, *ProcessImageRequest) (*Empty, error)
 	mustEmbedUnimplementedWorkerServer()
 }
 
@@ -59,7 +59,7 @@ type WorkerServer interface {
 type UnimplementedWorkerServer struct {
 }
 
-func (UnimplementedWorkerServer) ProcessImage(context.Context, *ProcessImageRequest) (*ProcessImageResponse, error) {
+func (UnimplementedWorkerServer) ProcessImage(context.Context, *ProcessImageRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProcessImage not implemented")
 }
 func (UnimplementedWorkerServer) mustEmbedUnimplementedWorkerServer() {}

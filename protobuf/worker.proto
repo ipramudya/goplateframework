@@ -5,7 +5,7 @@ option go_package = "internal/worker/pb";
 package worker;
 
 service Worker {
-    rpc ProcessImage(ProcessImageRequest) returns (ProcessImageResponse) {}
+    rpc ProcessImage(ProcessImageRequest) returns (Empty) {}
 };
 
 message ProcessImageRequest {
@@ -19,3 +19,5 @@ message ProcessImageResponse {
     string message = 2;
     string image_url = 3;
 }
+
+message Empty {}
