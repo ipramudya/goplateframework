@@ -2,13 +2,13 @@ package authweb
 
 import (
 	"context"
-	"errors"
 	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/goplateframework/internal/domain/auth"
-	"github.com/goplateframework/internal/sdk/errs"
+	"github.com/goplateframework/internal/sdk/errshttp"
 	"github.com/goplateframework/internal/sdk/tokenutil"
+	"github.com/goplateframework/internal/sdk/validate"
 	"github.com/goplateframework/internal/web/webcontext"
 	"github.com/goplateframework/pkg/logger"
 	"github.com/labstack/echo/v4"
@@ -33,20 +33,23 @@ func (con *controller) login(c echo.Context) error {
 	dto := new(auth.LoginDTO)
 
 	if err := c.Bind(dto); err != nil {
-		e := errs.Newf(errs.InvalidArgument, "invalid request: %v", err)
-		con.log.Error(e.Debug())
-		return c.JSON(e.HTTPStatus(), e)
+		return errshttp.New(errshttp.InvalidArgument, "Given JSON is invalid")
 	}
 
 	if err := dto.Validate(); err != nil {
-		e := errs.Newf(errs.InvalidArgument, "invalid request: (%v)", err)
-		con.log.Error(e.Debug())
-		return c.JSON(e.HTTPStatus(), e)
+		e := errshttp.New(errshttp.InvalidArgument, "Given JSON is out of validation rules")
+
+		validationErrs := validate.SplitErrors(err)
+		for _, s := range validationErrs {
+			e.AddDetail(s)
+		}
+
+		return e
 	}
 
 	a, err := con.authUC.Login(c.Request().Context(), dto.Email, dto.Password)
 	if err != nil {
-		return c.JSON(err.(*errs.Error).HTTPStatus(), err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, a)
@@ -57,7 +60,15 @@ func (con *controller) logout(c echo.Context) error {
 	rt := webcontext.GetRefreshToken(c.Request().Context())
 
 	if at == "" || rt == "" {
-		e := errs.New(errs.Unauthenticated, errors.New("unauthenticated"))
+		e := errshttp.New(errshttp.Unauthenticated, "Could not give access to this resource")
+		if at == "" {
+			e.AddDetail("token: access_token is missing")
+		}
+
+		if rt == "" {
+			e.AddDetail("token: refresh_token is missing")
+		}
+
 		return e
 	}
 
@@ -65,14 +76,14 @@ func (con *controller) logout(c echo.Context) error {
 	rtc := webcontext.GetRefreshTokenClaims(c.Request().Context())
 
 	if atc == nil || rtc == nil {
-		e := errs.New(errs.Unauthenticated, errors.New("unauthenticated"))
-		con.log.Error(e.Debug())
+		e := errshttp.New(errshttp.Unauthenticated, "Could not give access to this resource")
+		e.AddDetail("data: claims are not found")
 		return e
 	}
 
 	err := con.authUC.Logout(c.Request().Context(), at, rt, atc, rtc)
 	if err != nil {
-		return c.JSON(err.(*errs.Error).HTTPStatus(), err)
+		return err
 	}
 
 	return c.NoContent(http.StatusNoContent)
@@ -82,21 +93,23 @@ func (con *controller) refreshToken(c echo.Context) error {
 	rt := webcontext.GetRefreshToken(c.Request().Context())
 
 	if rt == "" {
-		e := errs.New(errs.Unauthenticated, errors.New("unauthenticated"))
-		return c.JSON(e.HTTPStatus(), e)
+		e := errshttp.New(errshttp.Unauthenticated, "Could not give access to this resource")
+		e.AddDetail("token: refresh_token is missing")
+		return e
 	}
 
 	claims := webcontext.GetRefreshTokenClaims(c.Request().Context())
 
 	if claims == nil {
-		e := errs.New(errs.Unauthenticated, errors.New("unauthenticated"))
-		return c.JSON(e.HTTPStatus(), e)
+		e := errshttp.New(errshttp.Unauthenticated, "Could not give access to this resource")
+		e.AddDetail("data: claims are not found")
+		return e
 	}
 
 	a, err := con.authUC.Refresh(c.Request().Context(), rt, claims.AccountID)
 
 	if err != nil {
-		return c.JSON(err.(*errs.Error).HTTPStatus(), err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, a)

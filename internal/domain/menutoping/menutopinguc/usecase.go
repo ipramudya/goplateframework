@@ -2,13 +2,12 @@ package menutopinguc
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/goplateframework/config"
 	"github.com/goplateframework/internal/domain/menutoping"
-	"github.com/goplateframework/internal/sdk/errs"
+	"github.com/goplateframework/internal/sdk/errshttp"
 	"github.com/goplateframework/pkg/logger"
 )
 
@@ -51,9 +50,7 @@ func (uc *Usecase) Create(ctx context.Context, nmt *menutoping.NewMenuTopingsDTO
 	}
 
 	if err := uc.menuTopingDBRepo.Create(ctx, mt); err != nil {
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Error(e.DebugWithDetail(err.Error()))
-		return nil, e
+		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	return mt, nil
@@ -63,9 +60,7 @@ func (uc *Usecase) GetAll(ctx context.Context) ([]*menutoping.MenuTopingsDTO, er
 	mt, err := uc.menuTopingDBRepo.GetAll(ctx)
 
 	if err != nil {
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Error(e.DebugWithDetail(err.Error()))
-		return nil, e
+		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	return mt, nil
@@ -75,9 +70,7 @@ func (uc *Usecase) GetOne(ctx context.Context, id uuid.UUID) (*menutoping.MenuTo
 	mt, err := uc.menuTopingDBRepo.GetOne(ctx, id)
 
 	if err != nil {
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Error(e.DebugWithDetail(err.Error()))
-		return nil, e
+		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	return mt, nil
@@ -94,21 +87,15 @@ func (uc *Usecase) Update(ctx context.Context, nmt *menutoping.NewMenuTopingsDTO
 	}
 
 	if err := uc.menuTopingDBRepo.Update(ctx, mt); err != nil {
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Error(e.DebugWithDetail(err.Error()))
-		return nil, e
+		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	return mt, nil
 }
 
 func (uc *Usecase) Delete(ctx context.Context, id uuid.UUID) error {
-	err := uc.menuTopingDBRepo.Delete(ctx, id)
-
-	if err != nil {
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Error(e.DebugWithDetail(err.Error()))
-		return e
+	if err := uc.menuTopingDBRepo.Delete(ctx, id); err != nil {
+		return errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	return nil

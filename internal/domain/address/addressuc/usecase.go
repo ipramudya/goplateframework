@@ -3,13 +3,13 @@ package addressuc
 import (
 	"context"
 	"database/sql"
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/goplateframework/config"
 	"github.com/goplateframework/internal/domain/address"
-	"github.com/goplateframework/internal/sdk/errs"
+	"github.com/goplateframework/internal/sdk/errshttp"
 	"github.com/goplateframework/pkg/logger"
 )
 
@@ -46,9 +46,7 @@ func (uc *Usecase) Create(ctx context.Context, na *address.NewAddressDTO) (*addr
 	}
 
 	if err := uc.repo.Create(ctx, a); err != nil {
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Error(e.Debug())
-		return nil, e
+		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	return a, nil
@@ -59,14 +57,12 @@ func (uc *Usecase) GetOne(ctx context.Context, id uuid.UUID) (*address.AddressDT
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			e := errs.New(errs.NotFound, errors.New("address not found"))
-			uc.log.Error(e.Debug())
+			e := errshttp.New(errshttp.NotFound, "Could not find address")
+			e.AddDetail(fmt.Sprintf("data: address with id %s not found", id))
 			return nil, e
 		}
 
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Error(e.Debug())
-		return nil, e
+		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	return a, nil
@@ -84,14 +80,12 @@ func (uc *Usecase) Update(ctx context.Context, na *address.NewAddressDTO, id uui
 
 	if err := uc.repo.Update(ctx, a); err != nil {
 		if err == sql.ErrNoRows {
-			e := errs.New(errs.NotFound, errors.New("address not found"))
-			uc.log.Error(e.Debug())
+			e := errshttp.New(errshttp.NotFound, "Could not find address")
+			e.AddDetail(fmt.Sprintf("data: address with id %s not found", id))
 			return nil, e
 		}
 
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Error(e.Debug())
-		return nil, e
+		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	return a, nil
@@ -99,9 +93,7 @@ func (uc *Usecase) Update(ctx context.Context, na *address.NewAddressDTO, id uui
 
 func (uc *Usecase) Delete(ctx context.Context, id uuid.UUID) error {
 	if err := uc.repo.Delete(ctx, id); err != nil {
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Error(e.Debug())
-		return e
+		return errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	return nil

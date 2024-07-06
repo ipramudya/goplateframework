@@ -87,12 +87,12 @@ func (uqp *UnparsedQueryParams) setFilter(qp *QueryParams) error {
 	// outlet_id is needed to retrieve menus only for an outlet,
 	// system doesn't allow to retrieve all menus
 	if uqp.outletId == "" {
-		return errors.New("outlet_id cannot be empty")
+		return errors.New("filter: outlet_id cannot be empty")
 	}
 
 	outletId, err := uuid.Parse(uqp.outletId)
 	if err != nil {
-		return errors.New("outlet_id is not valid")
+		return errors.New("filter: outlet_id is not valid")
 	}
 	qp.Filter.OutletId = outletId.String()
 

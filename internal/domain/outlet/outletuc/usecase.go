@@ -3,7 +3,7 @@ package outletuc
 import (
 	"context"
 	"database/sql"
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,7 +11,7 @@ import (
 	"github.com/goplateframework/internal/domain/address"
 	"github.com/goplateframework/internal/domain/outlet"
 	"github.com/goplateframework/internal/domain/outlet/outletweb"
-	"github.com/goplateframework/internal/sdk/errs"
+	"github.com/goplateframework/internal/sdk/errshttp"
 	"github.com/goplateframework/internal/web/result"
 	"github.com/goplateframework/pkg/logger"
 )
@@ -54,9 +54,7 @@ func (uc *Usecase) Create(ctx context.Context, no *outlet.NewOutletDTO) (*outlet
 	}
 
 	if err := uc.repo.Create(ctx, o); err != nil {
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Error(e.Debug())
-		return nil, e
+		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	return o, nil
@@ -65,22 +63,18 @@ func (uc *Usecase) Create(ctx context.Context, no *outlet.NewOutletDTO) (*outlet
 func (uc *Usecase) GetAll(ctx context.Context, qp *outletweb.QueryParams) (*result.Result[outlet.OutletDTO], error) {
 	total, err := uc.repo.Count(ctx)
 	if err != nil {
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Error(e.DebugWithDetail(err.Error()))
-		return nil, e
+		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	if !qp.Page.CanPaginate(total) {
-		e := errs.New(errs.InvalidArgument, errors.New("page requested is out of range"))
-		uc.log.Error(e.Debug())
+		e := errshttp.New(errshttp.InvalidArgument, "Page requested is out of range")
+		e.AddDetail(fmt.Sprintf("pagination: page number must be between 1 and %d", total))
 		return nil, e
 	}
 
 	o, err := uc.repo.GetAll(ctx, qp)
 	if err != nil {
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Error(e.DebugWithDetail(err.Error()))
-		return nil, e
+		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	return result.New(o, total, qp.Page.Number, qp.Page.Size), nil
@@ -91,14 +85,12 @@ func (uc *Usecase) GetOne(ctx context.Context, id uuid.UUID) (*outlet.OutletDTO,
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			e := errs.New(errs.NotFound, errors.New("outlet not found"))
-			uc.log.Error(e.Debug())
+			e := errshttp.New(errshttp.NotFound, "Outlet not found")
+			e.AddDetail(fmt.Sprintf("data: outlet with id %s not found", id))
 			return nil, e
 		}
 
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Error(e.Debug())
-		return nil, e
+		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	return o, nil
@@ -116,28 +108,20 @@ func (uc *Usecase) Update(ctx context.Context, no *outlet.NewOutletDTO, id uuid.
 	}
 
 	if err := uc.repo.Update(ctx, o); err != nil {
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Error(e.Debug())
-		return nil, e
+		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	oa, err := uc.repo.GetOne(ctx, id)
 	if err != nil {
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Error(e.Debug())
-		return nil, e
+		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	return oa, nil
 }
 
 func (uc *Usecase) Delete(ctx context.Context, id uuid.UUID) error {
-	err := uc.repo.Delete(ctx, id)
-
-	if err != nil {
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Error(e.DebugWithDetail(err.Error()))
-		return e
+	if err := uc.repo.Delete(ctx, id); err != nil {
+		return errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	return nil

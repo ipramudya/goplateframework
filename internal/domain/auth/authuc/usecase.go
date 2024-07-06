@@ -2,7 +2,7 @@ package authuc
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -10,7 +10,7 @@ import (
 	"github.com/goplateframework/config"
 	"github.com/goplateframework/internal/domain/account"
 	"github.com/goplateframework/internal/domain/auth"
-	"github.com/goplateframework/internal/sdk/errs"
+	"github.com/goplateframework/internal/sdk/errshttp"
 	"github.com/goplateframework/internal/sdk/tokenutil"
 	"github.com/goplateframework/pkg/logger"
 	"golang.org/x/crypto/bcrypt"
@@ -47,20 +47,16 @@ func (uc *Usecase) Login(ctx context.Context, email, password string) (*auth.Aut
 	a, err := uc.accountDBRepo.GetOneByEmail(ctx, email)
 
 	if err != nil {
-		e := errs.New(errs.InvalidCredentials, errors.New("invalid email or password"))
-		uc.log.Error(e.Debug())
-		return nil, e
+		return nil, errshttp.New(errshttp.InvalidCredentials, "Credentials are invalid, either email and/or password")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(a.Password), []byte(password)); err != nil {
-		e := errs.New(errs.InvalidCredentials, errors.New("invalid email or password"))
-		uc.log.Error(e.Debug())
-		return nil, e
+		return nil, errshttp.New(errshttp.InvalidCredentials, "Credentials are invalid, either email and/or password")
 	}
 
 	if err := uc.authCacheRepo.RemoveRefreshTokenFromBlacklist(ctx, a.ID); err != nil {
-		e := errs.Newf(errs.Internal, "failed to remove refresh token from blacklist: %v", err)
-		uc.log.Error(e.Debug())
+		e := errshttp.New(errshttp.Internal, "Failed to refresh token from blacklist")
+		e.AddDetail(fmt.Sprintf("data: %v", err))
 		return nil, e
 	}
 
@@ -77,8 +73,8 @@ func (uc *Usecase) Login(ctx context.Context, email, password string) (*auth.Aut
 			Role:      a.Role,
 		})
 		if err != nil {
-			e := errs.Newf(errs.Internal, "failed to generate access_token: %v", err)
-			uc.log.Error(e.Debug())
+			e := errshttp.New(errshttp.Internal, fmt.Sprintf("Failed to generate access_token, %v", err))
+			uc.log.Error(e.ErrorForLoggingDebug())
 			ch <- nil // store nil pointer to channel
 			return
 		}
@@ -92,8 +88,8 @@ func (uc *Usecase) Login(ctx context.Context, email, password string) (*auth.Aut
 			AccountID: a.ID,
 		})
 		if err != nil {
-			e := errs.Newf(errs.Internal, "failed to generate refresh_token: %v", err)
-			uc.log.Error(e.Debug())
+			e := errshttp.New(errshttp.Internal, fmt.Sprintf("Failed to generate refresh_token, %v", err))
+			uc.log.Error(e.ErrorForLoggingDebug())
 			ch <- nil // store nil pointer to channel
 			return
 		}
@@ -104,8 +100,7 @@ func (uc *Usecase) Login(ctx context.Context, email, password string) (*auth.Aut
 	at, rt := <-atCh, <-rtCh
 
 	if at == nil || rt == nil {
-		e := errs.New(errs.Internal, errors.New("failed to generate token"))
-		return nil, e
+		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	return &auth.AuthDTO{
@@ -128,8 +123,8 @@ func (uc *Usecase) Logout(ctx context.Context, accessToken, refreshToken string,
 
 		err := uc.authCacheRepo.AddAccessTokenToBlacklist(ctx, accessToken, atTime)
 		if err != nil {
-			e := errs.Newf(errs.Internal, "failed to add access token to blacklist: %v", err)
-			uc.log.Error(e.Debug())
+			e := errshttp.New(errshttp.Internal, "Failed to add access token from blacklist")
+			e.AddDetail(fmt.Sprintf("data: %v", err))
 			chanErrs <- e
 		}
 		chanErrs <- nil
@@ -140,17 +135,16 @@ func (uc *Usecase) Logout(ctx context.Context, accessToken, refreshToken string,
 
 		err := uc.authCacheRepo.AddRefreshTokenToBlacklist(ctx, rtc.AccountID, refreshToken, rtTime)
 		if err != nil {
-			e := errs.Newf(errs.Internal, "failed to add refresh token to blacklist: %v", err)
-			uc.log.Error(e.Debug())
+			e := errshttp.New(errshttp.Internal, "Failed to add refresh token from blacklist")
+			e.AddDetail(fmt.Sprintf("data: %v", err))
 			chanErrs <- e
 		}
 		chanErrs <- nil
 	}(chanErrs)
 
 	wg.Wait()
-	e := <-chanErrs
 
-	if e != nil {
+	if e := <-chanErrs; e != nil {
 		return e
 	}
 
@@ -160,14 +154,12 @@ func (uc *Usecase) Logout(ctx context.Context, accessToken, refreshToken string,
 func (uc *Usecase) Refresh(ctx context.Context, refreshToken string, accountID uuid.UUID) (*auth.AuthDTO, error) {
 	a, err := uc.accountDBRepo.GetOne(ctx, accountID)
 	if err != nil {
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Error(e.Debug())
-		return nil, e
+		return nil, errshttp.New(errshttp.NotFound, "Something went wrong")
 	}
 
 	if a == nil {
-		e := errs.New(errs.NotFound, errors.New("account not found"))
-		uc.log.Error(e.Debug())
+		e := errshttp.New(errshttp.NotFound, "Account could not be found")
+		e.AddDetail(fmt.Sprintf("data: account with id %s not found", accountID))
 		return nil, e
 	}
 
@@ -178,9 +170,7 @@ func (uc *Usecase) Refresh(ctx context.Context, refreshToken string, accountID u
 	})
 
 	if err != nil {
-		e := errs.Newf(errs.Internal, "failed to generate access_token: %v", err)
-		uc.log.Error(e.Debug())
-		return nil, e
+		return nil, errshttp.New(errshttp.NotFound, "Something went wrong")
 	}
 
 	return &auth.AuthDTO{

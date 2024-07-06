@@ -6,7 +6,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/goplateframework/internal/domain/address"
-	"github.com/goplateframework/internal/sdk/errs"
+	"github.com/goplateframework/internal/sdk/errshttp"
+	"github.com/goplateframework/internal/sdk/validate"
 	"github.com/goplateframework/pkg/logger"
 	"github.com/labstack/echo/v4"
 )
@@ -29,27 +30,30 @@ func (con *controller) update(c echo.Context) error {
 	na := new(address.NewAddressDTO)
 
 	if err := c.Bind(na); err != nil {
-		e := errs.Newf(errs.InvalidArgument, "invalid request: %v", err)
-		con.log.Error(e.Debug())
-		return c.JSON(e.HTTPStatus(), e)
+		return errshttp.New(errshttp.InvalidArgument, "Given JSON is invalid")
 	}
 
 	if err := na.Validate(); err != nil {
-		e := errs.Newf(errs.InvalidArgument, "invalid request: (%v)", err)
-		con.log.Error(e.Debug())
-		return c.JSON(e.HTTPStatus(), e)
+		e := errshttp.New(errshttp.InvalidArgument, "Given JSON is out of validation rules")
+
+		validationErrs := validate.SplitErrors(err)
+		for _, s := range validationErrs {
+			e.AddDetail(s)
+		}
+
+		return e
 	}
 
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		e := errs.Newf(errs.InvalidArgument, "invalid id: %v", err)
-		con.log.Error(e.Debug())
-		return c.JSON(e.HTTPStatus(), e)
+		e := errshttp.New(errshttp.InvalidArgument, "Address id is invalid, should be valid UUID")
+		e.AddDetail("id: invalid")
+		return e
 	}
 
 	a, err := con.addressUC.Update(c.Request().Context(), na, id)
 	if err != nil {
-		return c.JSON(err.(*errs.Error).HTTPStatus(), err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, a)

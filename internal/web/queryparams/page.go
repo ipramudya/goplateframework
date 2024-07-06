@@ -1,6 +1,7 @@
 package queryparams
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"strconv"
@@ -38,15 +39,15 @@ func ParsePage(pageNumber, pageSize string) (*Page, error) {
 	}
 
 	if number <= 0 {
-		return nil, fmt.Errorf("page number must be greater than zero")
+		return nil, errors.New("pagination: page number must be greater than zero")
 	}
 
 	if size <= 0 {
-		return nil, fmt.Errorf("page size must be greater than zero")
+		return nil, fmt.Errorf("pagination: size must be greater than zero")
 	}
 
 	if size > 100 {
-		return nil, fmt.Errorf("page size too big, max is 100")
+		return nil, fmt.Errorf("pagination: page size too big, max is 100")
 	}
 
 	return &Page{

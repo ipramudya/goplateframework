@@ -2,6 +2,7 @@ package validate
 
 import (
 	"errors"
+	"reflect"
 	"strings"
 	"time"
 
@@ -25,3 +26,12 @@ var (
 		return nil
 	})
 )
+
+func SplitErrors(err error) []string {
+	errStr := strings.TrimSuffix(err.Error(), ".")
+
+	if reflect.TypeOf(err) == reflect.TypeOf(validation.Errors{}) {
+		return strings.Split(errStr, ";")
+	}
+	return nil
+}

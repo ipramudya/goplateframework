@@ -47,7 +47,7 @@ func ParseOrderBy(allowedFields []string, orderby string, defaultOrder *OrderBy)
 	}
 
 	if !slices.Contains(allowedFields, orderby) {
-		return nil, fmt.Errorf("field %s does not exist", orderby)
+		return nil, fmt.Errorf("sorting: %s does not exist", orderby)
 	}
 
 	return NewOrderBy(orderby, direction), nil

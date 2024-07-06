@@ -62,4 +62,5 @@ func (w *Web) EnableGlobalMware() {
 	w.Echo.Use(middleware.Secure())
 	w.Echo.Use(middleware.BodyLimit("10M"))
 	w.Echo.Use(w.Mid.RequestLoggerMware)
+	w.Echo.Use(w.Mid.ErrorLoggingMware)
 }

@@ -2,14 +2,14 @@ package menuuc
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/goplateframework/config"
 	"github.com/goplateframework/internal/domain/menu"
 	"github.com/goplateframework/internal/domain/menu/menuweb"
-	"github.com/goplateframework/internal/sdk/errs"
+	"github.com/goplateframework/internal/sdk/errshttp"
 	"github.com/goplateframework/internal/web/result"
 	"github.com/goplateframework/internal/worker/pb"
 	"github.com/goplateframework/pkg/logger"
@@ -57,9 +57,7 @@ func (uc *Usecase) Create(ctx context.Context, nm *menu.NewMenuDTO, menuImage []
 	}
 
 	if err := uc.menuDBRepo.Create(ctx, m); err != nil {
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Errorf(e.DebugWithDetail(err.Error()))
-		return nil, e
+		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	go func() {
@@ -83,22 +81,18 @@ func (uc *Usecase) Create(ctx context.Context, nm *menu.NewMenuDTO, menuImage []
 func (uc *Usecase) GetAll(ctx context.Context, qp *menuweb.QueryParams) (*result.Result[menu.MenuDTO], error) {
 	total, err := uc.menuDBRepo.Count(ctx, qp.Filter.OutletId)
 	if err != nil {
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Error(e.DebugWithDetail(err.Error()))
-		return nil, e
+		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	if !qp.Page.CanPaginate(total) {
-		e := errs.New(errs.InvalidArgument, errors.New("page requested is out of range"))
-		uc.log.Error(e.Debug())
+		e := errshttp.New(errshttp.InvalidArgument, "Page requested is out of range")
+		e.AddDetail(fmt.Sprintf("pagination: page number must be between 1 and %d", total))
 		return nil, e
 	}
 
 	m, err := uc.menuDBRepo.GetAll(ctx, qp)
 	if err != nil {
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Error(e.DebugWithDetail(err.Error()))
-		return nil, e
+		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	return result.New(m, total, qp.Page.Number, qp.Page.Size), nil
@@ -117,9 +111,7 @@ func (uc *Usecase) Update(ctx context.Context, nm *menu.NewMenuDTO, id uuid.UUID
 	}
 
 	if err := uc.menuDBRepo.Update(ctx, m); err != nil {
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Error(e.DebugWithDetail(err.Error()))
-		return nil, e
+		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	return m, nil
@@ -127,9 +119,7 @@ func (uc *Usecase) Update(ctx context.Context, nm *menu.NewMenuDTO, id uuid.UUID
 
 func (uc *Usecase) Delete(ctx context.Context, id uuid.UUID) error {
 	if err := uc.menuDBRepo.Delete(ctx, id); err != nil {
-		e := errs.New(errs.Internal, errors.New("something went wrong"))
-		uc.log.Error(e.DebugWithDetail(err.Error()))
-		return e
+		return errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
 	return nil
