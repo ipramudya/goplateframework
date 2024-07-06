@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/goplateframework/config"
-	"github.com/goplateframework/internal/server"
+	"github.com/goplateframework/internal/httpserver"
 	"github.com/goplateframework/internal/worker/pb"
 	"github.com/goplateframework/pkg/db"
 	"github.com/goplateframework/pkg/grpcclient"
@@ -86,7 +86,7 @@ func run(ctx context.Context, conf *config.Config, log *logger.Log) error {
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
 	// server configuration
-	serverConf := server.Config{
+	serverConf := httpserver.Config{
 		DB:       db,
 		RDB:      rdb,
 		Log:      log,
@@ -97,7 +97,7 @@ func run(ctx context.Context, conf *config.Config, log *logger.Log) error {
 	// create http server, pass server configuration to server handler
 	serv := &http.Server{
 		Addr:         conf.Server.Host + ":" + conf.Server.Port,
-		Handler:      server.Handler(&serverConf),
+		Handler:      httpserver.Handler(&serverConf),
 		ReadTimeout:  time.Second * conf.Server.ReadTimeout,
 		WriteTimeout: time.Second * conf.Server.WriteTimeout,
 	}

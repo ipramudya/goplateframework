@@ -1,4 +1,4 @@
-package server
+package httpserver
 
 import (
 	"github.com/goplateframework/internal/domain/account/accountrepo"
