@@ -8,7 +8,7 @@ import (
 
 func Init(conf *config.Config) (*grpc.ClientConn, error) {
 	return grpc.NewClient(
-		conf.RPC.Port,
+		conf.GRPCWorker.Port,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 }

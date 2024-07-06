@@ -118,7 +118,7 @@ func (s *server) storeImage(ctx context.Context, imageData []byte, tableName str
 	fileName := fmt.Sprintf("%s.webp", id)
 	fullPath := path.Join(folderName, fileName)
 
-	bucket := s.storage.Bucket(s.conf.Firebase.BucketName)
+	bucket := s.storage.Bucket(s.conf.GoogleStorage.BucketName)
 	object := bucket.Object(fullPath)
 
 	writer := object.NewWriter(ctx)
@@ -136,7 +136,7 @@ func (s *server) storeImage(ctx context.Context, imageData []byte, tableName str
 		return "", fmt.Errorf("error setting ACL: %v", err)
 	}
 
-	return fmt.Sprintf("%s/%s/%s", FirebaseStorageDomain, s.conf.Firebase.BucketName, fullPath), nil
+	return fmt.Sprintf("%s/%s/%s", FirebaseStorageDomain, s.conf.GoogleStorage.BucketName, fullPath), nil
 }
 
 func (s *server) writeIntoDatabase(ctx context.Context, imageUrl string, tableName string, id string) error {

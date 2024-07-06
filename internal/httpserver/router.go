@@ -22,16 +22,16 @@ import (
 	"github.com/goplateframework/internal/web"
 )
 
-func router(w *web.Web, conf *Config) {
+func router(w *web.Web, conf *Options) {
 	accountDBRepo := accountrepo.NewDB(conf.DB)
-	accountCacheRepo := accountrepo.NewCache(conf.RDB)
+	accountCacheRepo := accountrepo.NewCache(conf.Cache)
 	accountUC := accountuc.New(conf.ServConf, conf.Log, accountDBRepo, accountCacheRepo)
 	accountweb.Route(w, &accountweb.Options{
 		Log:       conf.Log,
 		AccountUC: accountUC,
 	})
 
-	authCacheRepo := authrepo.NewCache(conf.RDB)
+	authCacheRepo := authrepo.NewCache(conf.Cache)
 	authUC := authuc.New(conf.ServConf, conf.Log, authCacheRepo, accountDBRepo)
 	authweb.Route(w, &authweb.Options{
 		Log:    conf.Log,

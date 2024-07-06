@@ -7,12 +7,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	"cloud.google.com/go/storage"
 	"github.com/goplateframework/config"
 	"github.com/goplateframework/internal/worker/grpcserver"
 	"github.com/goplateframework/pkg/db"
+	"github.com/goplateframework/pkg/googlestorage"
 	"github.com/goplateframework/pkg/logger"
-	"google.golang.org/api/option"
 	"google.golang.org/grpc"
 )
 
@@ -42,9 +41,8 @@ func main() {
 func run(ctx context.Context, conf *config.Config, log *logger.Log) error {
 	log.Infof("starting server...")
 
-	log.Infof("initializing database connection on host: %s", conf.DB.Host)
-
 	// retrieve database connection
+
 	db, err := db.Init(conf)
 	if err != nil {
 		log.Fatalf("database connection error, %v", err)
@@ -54,26 +52,20 @@ func run(ctx context.Context, conf *config.Config, log *logger.Log) error {
 	}
 	defer db.Close()
 
-	log.Info("initializing firebase storage client...")
+	// initialize google storage
+	storage, err := googlestorage.Init(ctx, conf)
 
-	cwd, err := os.Getwd()
 	if err != nil {
-		log.Fatalf("get current working directory error, %v", err)
-	}
-
-	// initialize firebase storage
-	storagePath := cwd + conf.Firebase.Path
-	storage, err := storage.NewClient(ctx, option.WithCredentialsFile(storagePath))
-	if err != nil {
-		log.Fatalf("firebase storage client error, %v", err)
+		log.Fatalf("google storage client error, %v", err)
 		return err
 	} else {
-		log.Info("firebase storage client connected")
+		log.Info("google storage client connected")
 	}
 	defer storage.Close()
 
-	// set up GRPC server
-	lis, err := net.Listen("tcp", conf.RPC.Port)
+	// set GRPC server up
+
+	listener, err := net.Listen("tcp", conf.GRPCWorker.Port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 		return err
@@ -82,33 +74,36 @@ func run(ctx context.Context, conf *config.Config, log *logger.Log) error {
 	shutdownCh := make(chan os.Signal, 1)
 	signal.Notify(shutdownCh, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
-	grpcSer := grpc.NewServer()
-	grpcserver.Handle(grpcSer, &grpcserver.Options{
+	grpcServ := grpc.NewServer()
+	grpcserver.Handle(grpcServ, &grpcserver.Options{
 		Conf:    conf,
 		DB:      db,
 		Log:     log,
 		Storage: storage,
 	})
 
+	// channel for storing grpc server errors which may occur during serving net listener
 	serverErrCh := make(chan error, 1)
+
+	// run grpc server in goroutine
 	go func() {
-		log.Infof("starting grpc server on port: %s", conf.RPC.Port)
-		serverErrCh <- grpcSer.Serve(lis)
+		log.Infof("starting grpc server on port: %s", conf.GRPCWorker.Port)
+		serverErrCh <- grpcServ.Serve(listener)
 	}()
 
 	select {
 	case sig := <-shutdownCh:
 		log.Infof("shutdown signal received: %v", sig)
-		grpcSer.GracefulStop()
+		grpcServ.GracefulStop()
 		defer func() {
 			log.Infof("graceful stop completed: %s", sig)
-			lis.Close()
+			listener.Close()
 		}()
 
 	case err := <-serverErrCh:
 		if err != nil {
-			grpcSer.Stop()
-			defer lis.Close()
+			grpcServ.Stop()
+			defer listener.Close()
 
 			log.Fatalf("grpc server error, %v", err)
 			return err

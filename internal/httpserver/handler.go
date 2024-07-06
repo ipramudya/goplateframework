@@ -11,20 +11,20 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type Config struct {
+type Options struct {
 	DB       *sqlx.DB
-	RDB      *redis.Client
+	Cache    *redis.Client
 	Log      *logger.Log
 	ServConf *config.Config
 	Worker   pb.WorkerClient
 }
 
-func Handler(conf *Config) http.Handler {
+func Handler(conf *Options) http.Handler {
 	// create web application which contains a echo instance, as well as http server
 	w := web.New(conf.Log)
 
 	// middleware setup
-	w.InitCustomMware(conf.ServConf, conf.RDB)
+	w.InitCustomMware(conf.ServConf, conf.Cache)
 	w.EnableCORSMware(conf.ServConf.Server.AllowedOrigins)
 	w.EnableRecovererMware()
 	w.EnableGlobalMware()

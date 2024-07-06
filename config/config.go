@@ -3,70 +3,9 @@ package config
 import (
 	"errors"
 	"log"
-	"time"
 
 	"github.com/spf13/viper"
 )
-
-type Config struct {
-	Server   ServerConfig
-	DB       PostgresConfig
-	RDB      RedisConfig
-	Logger   Logger
-	RPC      RPC
-	Firebase Firebase
-}
-
-type ServerConfig struct {
-	AllowedOrigins        []string
-	AppVersion            string
-	CookieName            string
-	CSRF                  bool
-	CtxDefaultTimeout     time.Duration
-	Debug                 bool
-	Host                  string
-	JWTRefreshTokenSecret string
-	JWTAccessTokenSecret  string
-	Mode                  string
-	Port                  string
-	ReadTimeout           time.Duration
-	WriteTimeout          time.Duration
-}
-
-type Logger struct {
-	Development bool
-	Encoding    string
-	Filepath    string
-	Level       string
-}
-
-type PostgresConfig struct {
-	ConnMaxIddleTime int8
-	ConnMaxLifetime  int8
-	Dbname           string
-	Driver           string
-	Host             string
-	MaxIddleConns    int
-	MaxOpenConns     int
-	Password         string
-	Port             string
-	SSLMode          string
-	User             string
-	EndpointID       string
-}
-
-type RPC struct {
-	Port string
-}
-
-type Firebase struct {
-	Path       string
-	BucketName string
-}
-
-type RedisConfig struct {
-	Url string
-}
 
 func LoadConfig() (*viper.Viper, error) {
 	v := viper.New()

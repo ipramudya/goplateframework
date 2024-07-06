@@ -1,0 +1,40 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+bin = "./tmp/api/main"
+cmd = "go build -o ./tmp/api/main ./cmd/api"
+delay = 1000
+include_dir = []
+exclude_dir = ["assets", "tmp", "vendor", "testdata", ".vscode"]
+include_file = []
+exclude_file = []
+exclude_unchanged = true
+full_bin = "APP_ENV=dev APP_USER=air ./tmp/api/main"
+include_ext = ["go"]
+kill_delay = 500
+log = "air.log"
+send_interrupt = false
+stop_on_error = true
+
+[color]
+build = "yellow"
+main = "magenta"
+runner = "green"
+watcher = "cyan"
+
+[log]
+main_only = false
+time = false
+
+[misc]
+clean_on_exit = true
+
+[proxy]
+app_port = 0
+enabled = false
+proxy_port = 0
+
+[screen]
+clear_on_rebuild = false
+keep_scroll = true

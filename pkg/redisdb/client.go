@@ -7,7 +7,7 @@ import (
 )
 
 func Init(conf *config.Config) (*redis.Client, error) {
-	opt, err := redis.ParseURL(conf.RDB.Url)
+	opt, err := redis.ParseURL(conf.Cache.Url)
 	if err != nil {
 		return nil, err
 	}
