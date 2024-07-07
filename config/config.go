@@ -11,7 +11,7 @@ func Load() (*viper.Viper, error) {
 	v := viper.New()
 
 	v.AddConfigPath("./config/priv")
-	v.SetConfigName("configcloud")
+	v.SetConfigName("config")
 	v.SetConfigType("json")
 
 	if err := v.ReadInConfig(); err != nil {

@@ -17,9 +17,9 @@
     },
     "Logger": {
         "Development": true,
-        "Encoding": "json",
+        "Encoding": "",
         "Filepath": "",
-        "Level": "info"
+        "Level": ""
     },
     "DB": {
         "ConnMaxIddleTime": 0,
@@ -35,7 +35,14 @@
         "User": "",
         "EndpointID": ""
     },
-    "RDB": {
+    "Cache": {
         "Url": ""
+    },
+    "GRPCWorker": {
+        "Port": ""
+    },
+    "GoogleStorage": {
+        "Path": "",
+        "BucketName": ""
     }
 }
