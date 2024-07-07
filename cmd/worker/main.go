@@ -17,13 +17,13 @@ import (
 
 func main() {
 	// load and read config file
-	rawConfig, err := config.LoadConfig()
+	rawConfig, err := config.Load()
 	if err != nil {
 		panic("load config error, " + err.Error())
 	}
 
 	// parse raw config into config struct
-	conf, err := config.ParseConfig(rawConfig)
+	conf, err := config.Parse(rawConfig)
 	if err != nil {
 		panic("parse config error, " + err.Error())
 	}
