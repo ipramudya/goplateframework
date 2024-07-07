@@ -59,7 +59,7 @@ func (err *ErrorResponse) AddRequestID(requestID string) {
 	err.Err.RequestID = requestID
 }
 
-func (err *ErrorResponse) ErrorForLoggingDebug() string {
+func (err *ErrorResponse) LogForDebug() string {
 	return fmt.Sprintf("[code: %s, message: %s, func: %s, file: %s]", err.Err.Code, err.Err.Message, err.Err.FuncName, err.Err.FileName)
 }
 

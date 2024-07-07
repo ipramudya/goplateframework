@@ -74,7 +74,7 @@ func (uc *Usecase) Login(ctx context.Context, email, password string) (*auth.Aut
 		})
 		if err != nil {
 			e := errshttp.New(errshttp.Internal, fmt.Sprintf("Failed to generate access_token, %v", err))
-			uc.log.Error(e.ErrorForLoggingDebug())
+			uc.log.Error(e.LogForDebug())
 			ch <- nil // store nil pointer to channel
 			return
 		}
@@ -89,7 +89,7 @@ func (uc *Usecase) Login(ctx context.Context, email, password string) (*auth.Aut
 		})
 		if err != nil {
 			e := errshttp.New(errshttp.Internal, fmt.Sprintf("Failed to generate refresh_token, %v", err))
-			uc.log.Error(e.ErrorForLoggingDebug())
+			uc.log.Error(e.LogForDebug())
 			ch <- nil // store nil pointer to channel
 			return
 		}

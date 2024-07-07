@@ -42,7 +42,7 @@ func (mid *Middleware) ErrorLoggingMware(next echo.HandlerFunc) echo.HandlerFunc
 				reqId := c.Response().Header().Get(echo.HeaderXRequestID)
 
 				e.AddRequestID(reqId)
-				mid.log.Error(e.ErrorForLoggingDebug())
+				mid.log.Error(e.LogForDebug())
 
 				return c.JSON(e.HTTPStatus(), e)
 			default:
