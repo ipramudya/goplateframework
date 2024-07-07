@@ -75,7 +75,7 @@ func run(ctx context.Context, conf *config.Config, log *logger.Log) error {
 		log.Fatalf("grpc client error, %v", err)
 		return err
 	} else {
-		log.Infof("grpc client connected on port: %s", conf.GRPCWorker.Port)
+		log.Infof("grpc client connected on %s%s", conf.Server.Host, conf.GRPCWorker.Port)
 	}
 	defer grpcconn.Close()
 
@@ -83,30 +83,29 @@ func run(ctx context.Context, conf *config.Config, log *logger.Log) error {
 	shutdownCh := make(chan os.Signal, 1)
 	signal.Notify(shutdownCh, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
-	// server configuration
-	serverConf := httpserver.Options{
+	// initialize http server by passing necessary dependencies
+	server := httpserver.Init(&httpserver.Options{
 		DB:       db,
 		Cache:    rdb,
 		Log:      log,
 		ServConf: conf,
 		Worker:   pb.NewWorkerClient(grpcconn),
-	}
-
-	// create http server, pass server configuration to server handler
-	serv := &http.Server{
-		Addr:         conf.Server.Host + ":" + conf.Server.Port,
-		Handler:      httpserver.Handler(&serverConf),
-		ReadTimeout:  time.Second * conf.Server.ReadTimeout,
-		WriteTimeout: time.Second * conf.Server.WriteTimeout,
-	}
+	})
 
 	// channel for handling server errors which may occur during listening and serving
 	serverErrCh := make(chan error, 1)
 
 	// run server in goroutine
 	go func() {
-		log.Infof("server successfully running on %s", serv.Addr)
-		serverErrCh <- serv.ListenAndServe()
+		// create http server, pass server configuration to echo instance
+		s := &http.Server{
+			Addr:         conf.Server.Host + ":" + conf.Server.Port,
+			ReadTimeout:  time.Second * conf.Server.ReadTimeout,
+			WriteTimeout: time.Second * conf.Server.WriteTimeout,
+		}
+
+		log.Infof("server started on %s:%s", conf.Server.Host, conf.Server.Port)
+		serverErrCh <- server.StartServer(s)
 	}()
 
 	// main thread waits for shutdown signal within graceful shutdown
@@ -119,8 +118,8 @@ func run(ctx context.Context, conf *config.Config, log *logger.Log) error {
 		ctx, cancel := context.WithTimeout(ctx, conf.Server.CtxDefaultTimeout*time.Second)
 		defer cancel()
 
-		if err := serv.Shutdown(ctx); err != nil {
-			serv.Close()
+		if err := server.Shutdown(ctx); err != nil {
+			server.Close()
 			return fmt.Errorf("gracefull shutdown failed, server forced to shutdown: %v", err)
 		}
 

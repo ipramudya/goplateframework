@@ -11,6 +11,7 @@ import (
 func (mid *Middleware) RequestLoggerMware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		start := time.Now()
+		err := next(c)
 
 		req := c.Request()
 		res := c.Response()
@@ -27,7 +28,7 @@ func (mid *Middleware) RequestLoggerMware(next echo.HandlerFunc) echo.HandlerFun
 			since,
 		)
 
-		return next(c)
+		return err
 	}
 }
 
@@ -46,7 +47,11 @@ func (mid *Middleware) ErrorLoggingMware(next echo.HandlerFunc) echo.HandlerFunc
 				return c.JSON(e.HTTPStatus(), e)
 			default:
 				mid.log.Error(err.Error())
-				return c.JSON(http.StatusInternalServerError, err)
+				return c.JSON(http.StatusInternalServerError, struct {
+					Error string `json:"error"`
+				}{
+					Error: err.Error(),
+				})
 			}
 		}
 

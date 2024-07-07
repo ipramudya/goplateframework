@@ -24,10 +24,6 @@ func New(log *logger.Log) *Web {
 	}
 }
 
-func (w *Web) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-	w.Echo.ServeHTTP(rw, r)
-}
-
 func (w *Web) InitCustomMware(servConf *config.Config, cache *redis.Client) {
 	w.Mid = middlewares.New(servConf, w.log, cache)
 }

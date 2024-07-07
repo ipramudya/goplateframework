@@ -124,7 +124,7 @@ func ExtractBearerToken(authHeader string) (string, error) {
 	parts := strings.Split(authHeader, " ")
 
 	if len(parts) != 2 || parts[0] != "Bearer" {
-		return "", errors.New("expected authorization header format, \"Authorization: Bearer <token>\"")
+		return "", errors.New("expected authorization header format, \"Authorization = Bearer <token>\"")
 	}
 
 	return parts[1], nil
