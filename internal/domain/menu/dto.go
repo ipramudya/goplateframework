@@ -26,6 +26,7 @@ type NewMenuDTO struct {
 	Name        string  `json:"name" form:"name"`
 	Description string  `json:"description" form:"description"`
 	Price       float64 `json:"price" form:"price"`
+	ImageURL    string  `json:"image_url" form:"image_url"`
 	IsAvailable bool    `json:"is_available" form:"is_available"`
 	OutletID    string  `json:"outlet_id" form:"outlet_id"`
 }

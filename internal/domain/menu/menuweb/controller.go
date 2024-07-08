@@ -19,7 +19,7 @@ import (
 type iUsecase interface {
 	Create(ctx context.Context, nm *menu.NewMenuDTO, menuImage []byte) (*menu.MenuDTO, error)
 	GetAll(ctx context.Context, qp *QueryParams) (*result.Result[menu.MenuDTO], error)
-	Update(ctx context.Context, nm *menu.NewMenuDTO, id uuid.UUID) (*menu.MenuDTO, error)
+	Update(ctx context.Context, nm *menu.NewMenuDTO, id uuid.UUID, menuImage *[]byte) (*menu.MenuDTO, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
@@ -95,7 +95,7 @@ func (con *controller) update(c echo.Context) error {
 	nm := new(menu.NewMenuDTO)
 
 	if err := c.Bind(nm); err != nil {
-		return errshttp.New(errshttp.InvalidArgument, "Given JSON is invalid")
+		return errshttp.New(errshttp.InvalidArgument, "Given form-data is invalid")
 	}
 
 	if err := nm.Validate(); err != nil {
@@ -109,6 +109,12 @@ func (con *controller) update(c echo.Context) error {
 		return e
 	}
 
+	if nm.ImageURL == "" {
+		e := errshttp.New(errshttp.InvalidArgument, "Given form-data is out of validation rules")
+		e.AddDetail("image_url: cannot be blank")
+		return e
+	}
+
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		e := errshttp.New(errshttp.InvalidArgument, "Menu id is invalid, should be valid UUID")
@@ -116,7 +122,24 @@ func (con *controller) update(c echo.Context) error {
 		return e
 	}
 
-	m, err := con.menuUC.Update(c.Request().Context(), nm, id)
+	file, err := c.FormFile("image")
+	if err != nil && err != http.ErrMissingFile {
+		return errshttp.New(errshttp.InvalidArgument, "Given image form-data is invalid")
+	}
+
+	var menuImage *[]byte
+
+	if file != nil {
+		mi, err := formfile.Parse(file, "image/*")
+		if err != nil {
+			e := errshttp.New(errshttp.Internal, "Cannot parse given file")
+			e.AddDetail(err.Error())
+			return e
+		}
+		menuImage = &mi
+	}
+
+	m, err := con.menuUC.Update(c.Request().Context(), nm, id, menuImage)
 	if err != nil {
 		return err
 	}

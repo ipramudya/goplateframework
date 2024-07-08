@@ -98,20 +98,41 @@ func (uc *Usecase) GetAll(ctx context.Context, qp *menuweb.QueryParams) (*result
 	return result.New(m, total, qp.Page.Number, qp.Page.Size), nil
 }
 
-func (uc *Usecase) Update(ctx context.Context, nm *menu.NewMenuDTO, id uuid.UUID) (*menu.MenuDTO, error) {
+func (uc *Usecase) Update(ctx context.Context, nm *menu.NewMenuDTO, id uuid.UUID, menuImage *[]byte) (*menu.MenuDTO, error) {
+	if menuImage != nil {
+		nm.ImageURL = "pending"
+	}
+
 	m := &menu.MenuDTO{
 		ID:          id,
 		Name:        nm.Name,
 		Description: nm.Description,
 		Price:       nm.Price,
 		IsAvailable: nm.IsAvailable,
-		ImageURL:    "",
+		ImageURL:    nm.ImageURL,
 		OutletID:    nm.OutletID,
 		UpdatedAt:   time.Now(),
 	}
 
 	if err := uc.menuDBRepo.Update(ctx, m); err != nil {
 		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
+	}
+
+	if menuImage != nil {
+		go func() {
+			workerCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
+			_, err := uc.worker.ProcessImage(workerCtx, &pb.ProcessImageRequest{
+				Id:        id.String(),
+				Table:     "menus",
+				ImageData: *menuImage,
+			})
+
+			if err != nil {
+				uc.log.Error(err.Error())
+			}
+		}()
 	}
 
 	return m, nil
