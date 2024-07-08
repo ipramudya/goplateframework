@@ -59,7 +59,7 @@ func (con *controller) create(c echo.Context) error {
 		return errshttp.New(errshttp.InvalidArgument, "Image is required")
 	}
 
-	menuImage, err := formfile.Parse(file, "image")
+	menuImage, err := formfile.Parse(file, "image/*")
 	if err != nil {
 		e := errshttp.New(errshttp.Internal, "Cannot parse given file")
 		e.AddDetail(err.Error())
