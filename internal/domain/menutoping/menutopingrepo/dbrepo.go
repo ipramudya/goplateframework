@@ -69,9 +69,7 @@ func (dbrepo *repository) Update(ctx context.Context, m *menutoping.MenuTopingsD
 }
 
 func (dbrepo *repository) Delete(ctx context.Context, id uuid.UUID) error {
-	q := `
-	DELETE FROM menu_topings
-	WHERE id = $1`
+	q := `DELETE FROM menu_topings WHERE id = $1`
 
 	_, err := dbrepo.ExecContext(ctx, q, id)
 	return err

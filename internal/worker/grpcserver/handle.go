@@ -33,3 +33,7 @@ func Handle(s *grpc.Server, opts *Options) {
 		storage: opts.Storage,
 	})
 }
+
+const (
+	FirebaseStorageDomain string = "https://storage.googleapis.com"
+)

@@ -6,6 +6,7 @@ package worker;
 
 service Worker {
     rpc ProcessImage(ProcessImageRequest) returns (Empty) {}
+    rpc DeleteImage(DeleteImageRequest) returns (Empty) {}
 };
 
 message ProcessImageRequest {
@@ -14,10 +15,9 @@ message ProcessImageRequest {
     bytes image_data = 3;
 }
 
-message ProcessImageResponse {
-    bool success = 1;
-    string message = 2;
-    string image_url = 3;
+message DeleteImageRequest {
+    string table = 1;
+    string image_url = 2;
 }
 
 message Empty {}

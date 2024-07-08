@@ -2,6 +2,8 @@ package menutopinguc
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -128,9 +130,29 @@ func (uc *Usecase) Update(ctx context.Context, nmt *menutoping.NewMenuTopingsDTO
 }
 
 func (uc *Usecase) Delete(ctx context.Context, id uuid.UUID) error {
+	mt, err := uc.menuTopingDBRepo.GetOne(ctx, id)
+
+	if err == sql.ErrNoRows {
+		return errshttp.New(errshttp.NotFound, "Menu topping not found")
+	}
+
 	if err := uc.menuTopingDBRepo.Delete(ctx, id); err != nil {
 		return errshttp.New(errshttp.Internal, "Something went wrong")
 	}
+
+	go func() {
+		workerCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		_, err = uc.worker.DeleteImage(workerCtx, &pb.DeleteImageRequest{
+			Table:    "menu_topings",
+			ImageUrl: mt.ImageURL,
+		})
+
+		if err != nil {
+			uc.log.Error(fmt.Errorf("failed to delete image: %w", err).Error())
+		}
+	}()
 
 	return nil
 }

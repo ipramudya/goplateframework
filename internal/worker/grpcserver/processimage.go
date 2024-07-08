@@ -19,9 +19,8 @@ import (
 )
 
 const (
-	MaxWidthSupport       int    = 600
-	DefaultQuality        int    = 75
-	FirebaseStorageDomain string = "https://storage.googleapis.com"
+	MaxWidthSupport int = 600
+	DefaultQuality  int = 75
 )
 
 func (s *server) ProcessImage(ctx context.Context, req *pb.ProcessImageRequest) (*pb.Empty, error) {

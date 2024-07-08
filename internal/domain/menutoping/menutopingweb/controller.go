@@ -53,7 +53,9 @@ func (con *controller) create(c echo.Context) error {
 
 	file, err := c.FormFile("image")
 	if err != nil {
-		return errshttp.New(errshttp.InvalidArgument, "Given image form-data is invalid")
+		e := errshttp.New(errshttp.InvalidArgument, "Given image form-data is invalid")
+		e.AddDetail("image: either not present or cannot be processed")
+		return e
 	}
 
 	if file == nil {

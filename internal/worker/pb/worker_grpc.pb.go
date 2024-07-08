@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion8
 
 const (
 	Worker_ProcessImage_FullMethodName = "/worker.Worker/ProcessImage"
+	Worker_DeleteImage_FullMethodName  = "/worker.Worker/DeleteImage"
 )
 
 // WorkerClient is the client API for Worker service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type WorkerClient interface {
 	ProcessImage(ctx context.Context, in *ProcessImageRequest, opts ...grpc.CallOption) (*Empty, error)
+	DeleteImage(ctx context.Context, in *DeleteImageRequest, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type workerClient struct {
@@ -47,11 +49,22 @@ func (c *workerClient) ProcessImage(ctx context.Context, in *ProcessImageRequest
 	return out, nil
 }
 
+func (c *workerClient) DeleteImage(ctx context.Context, in *DeleteImageRequest, opts ...grpc.CallOption) (*Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, Worker_DeleteImage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // WorkerServer is the server API for Worker service.
 // All implementations must embed UnimplementedWorkerServer
 // for forward compatibility
 type WorkerServer interface {
 	ProcessImage(context.Context, *ProcessImageRequest) (*Empty, error)
+	DeleteImage(context.Context, *DeleteImageRequest) (*Empty, error)
 	mustEmbedUnimplementedWorkerServer()
 }
 
@@ -61,6 +74,9 @@ type UnimplementedWorkerServer struct {
 
 func (UnimplementedWorkerServer) ProcessImage(context.Context, *ProcessImageRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProcessImage not implemented")
+}
+func (UnimplementedWorkerServer) DeleteImage(context.Context, *DeleteImageRequest) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteImage not implemented")
 }
 func (UnimplementedWorkerServer) mustEmbedUnimplementedWorkerServer() {}
 
@@ -93,6 +109,24 @@ func _Worker_ProcessImage_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Worker_DeleteImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteImageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WorkerServer).DeleteImage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Worker_DeleteImage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WorkerServer).DeleteImage(ctx, req.(*DeleteImageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Worker_ServiceDesc is the grpc.ServiceDesc for Worker service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -103,6 +137,10 @@ var Worker_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ProcessImage",
 			Handler:    _Worker_ProcessImage_Handler,
+		},
+		{
+			MethodName: "DeleteImage",
+			Handler:    _Worker_DeleteImage_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

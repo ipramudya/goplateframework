@@ -70,6 +70,18 @@ func (dbrepo *repository) GetAll(ctx context.Context, qp *menuweb.QueryParams) (
 	return menus, nil
 }
 
+func (dbrepo *repository) GetOne(ctx context.Context, id uuid.UUID) (*menu.MenuDTO, error) {
+	m := new(Model)
+
+	q := `SELECT * FROM menus WHERE id = $1`
+
+	if err := dbrepo.QueryRowxContext(ctx, q, id).StructScan(m); err != nil {
+		return nil, err
+	}
+
+	return m.intoDTO(), nil
+}
+
 func (dbrepo *repository) Update(ctx context.Context, nm *menu.MenuDTO) error {
 	q := `
 	UPDATE 
@@ -88,9 +100,7 @@ func (dbrepo *repository) Update(ctx context.Context, nm *menu.MenuDTO) error {
 }
 
 func (dbrepo *repository) Delete(ctx context.Context, id uuid.UUID) error {
-	q := `
-	DELETE FROM menus
-	WHERE id = $1`
+	q := `DELETE FROM menus WHERE id = $1`
 
 	_, err := dbrepo.ExecContext(ctx, q, id)
 	return err

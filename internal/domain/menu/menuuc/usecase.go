@@ -2,6 +2,7 @@ package menuuc
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 type iRepository interface {
 	Create(ctx context.Context, nm *menu.MenuDTO) error
 	GetAll(ctx context.Context, qp *menuweb.QueryParams) ([]menu.MenuDTO, error)
+	GetOne(ctx context.Context, id uuid.UUID) (*menu.MenuDTO, error)
 	Update(ctx context.Context, nm *menu.MenuDTO) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	Count(ctx context.Context, outletId string) (int, error)
@@ -139,9 +141,29 @@ func (uc *Usecase) Update(ctx context.Context, nm *menu.NewMenuDTO, id uuid.UUID
 }
 
 func (uc *Usecase) Delete(ctx context.Context, id uuid.UUID) error {
+	m, err := uc.menuDBRepo.GetOne(ctx, id)
+
+	if err == sql.ErrNoRows {
+		return errshttp.New(errshttp.NotFound, "Menu topping not found")
+	}
+
 	if err := uc.menuDBRepo.Delete(ctx, id); err != nil {
 		return errshttp.New(errshttp.Internal, "Something went wrong")
 	}
+
+	go func() {
+		workerCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		_, err = uc.worker.DeleteImage(workerCtx, &pb.DeleteImageRequest{
+			Table:    "menus",
+			ImageUrl: m.ImageURL,
+		})
+
+		if err != nil {
+			uc.log.Error(fmt.Errorf("failed to delete image: %w", err).Error())
+		}
+	}()
 
 	return nil
 }
