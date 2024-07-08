@@ -17,9 +17,9 @@ import (
 
 // required usecase methods which this controller needs to operate the business logic
 type iUsecase interface {
-	Create(ctx context.Context, nm *menu.NewMenuDTO, menuImage []byte) (*menu.MenuDTO, error)
+	Create(ctx context.Context, nm *menu.NewMenuDTO, image *[]byte) (*menu.MenuDTO, error)
 	GetAll(ctx context.Context, qp *QueryParams) (*result.Result[menu.MenuDTO], error)
-	Update(ctx context.Context, nm *menu.NewMenuDTO, id uuid.UUID, menuImage *[]byte) (*menu.MenuDTO, error)
+	Update(ctx context.Context, nm *menu.NewMenuDTO, id uuid.UUID, image *[]byte) (*menu.MenuDTO, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
@@ -66,7 +66,7 @@ func (con *controller) create(c echo.Context) error {
 		return e
 	}
 
-	m, err := con.menuUC.Create(c.Request().Context(), nm, menuImage)
+	m, err := con.menuUC.Create(c.Request().Context(), nm, &menuImage)
 	if err != nil {
 		return err
 	}

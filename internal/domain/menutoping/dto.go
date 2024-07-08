@@ -21,12 +21,12 @@ type MenuTopingsDTO struct {
 }
 
 type NewMenuTopingsDTO struct {
-	Name        string  `json:"name"`
-	Price       float64 `json:"price"`
-	IsAvailable bool    `json:"is_available"`
-	Stock       int     `json:"stock"`
-	MenuID      uuid.UUID
-	// ImageURL    string  `json:"image_url"`
+	Name        string    `json:"name" form:"name"`
+	Price       float64   `json:"price" form:"price"`
+	IsAvailable bool      `json:"is_available" form:"is_available"`
+	Stock       int       `json:"stock" form:"stock"`
+	ImageURL    string    `json:"image_url" form:"image_url"`
+	MenuID      uuid.UUID `json:"menu_id" form:"menu_id"`
 }
 
 func (nmt NewMenuTopingsDTO) Validate() error {

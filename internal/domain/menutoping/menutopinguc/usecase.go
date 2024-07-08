@@ -8,6 +8,7 @@ import (
 	"github.com/goplateframework/config"
 	"github.com/goplateframework/internal/domain/menutoping"
 	"github.com/goplateframework/internal/sdk/errshttp"
+	"github.com/goplateframework/internal/worker/pb"
 	"github.com/goplateframework/pkg/logger"
 )
 
@@ -24,25 +25,28 @@ type Usecase struct {
 	conf             *config.Config
 	log              *logger.Log
 	menuTopingDBRepo iRepository
+	worker           pb.WorkerClient
 }
 
-func New(conf *config.Config, log *logger.Log, menuTopingDBRepo iRepository) *Usecase {
+func New(conf *config.Config, log *logger.Log, menuTopingDBRepo iRepository, worker pb.WorkerClient) *Usecase {
 	return &Usecase{
 		conf:             conf,
 		log:              log,
 		menuTopingDBRepo: menuTopingDBRepo,
+		worker:           worker,
 	}
 }
 
-func (uc *Usecase) Create(ctx context.Context, nmt *menutoping.NewMenuTopingsDTO) (*menutoping.MenuTopingsDTO, error) {
+func (uc *Usecase) Create(ctx context.Context, nmt *menutoping.NewMenuTopingsDTO, image *[]byte) (*menutoping.MenuTopingsDTO, error) {
 	now := time.Now()
+	id := uuid.New()
 
 	mt := &menutoping.MenuTopingsDTO{
-		ID:          uuid.New(),
+		ID:          id,
 		Name:        nmt.Name,
 		Price:       nmt.Price,
 		IsAvailable: nmt.IsAvailable,
-		ImageURL:    "",
+		ImageURL:    "pending",
 		Stock:       nmt.Stock,
 		CreatedAt:   now,
 		UpdatedAt:   now,
@@ -52,6 +56,21 @@ func (uc *Usecase) Create(ctx context.Context, nmt *menutoping.NewMenuTopingsDTO
 	if err := uc.menuTopingDBRepo.Create(ctx, mt); err != nil {
 		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
 	}
+
+	go func() {
+		workerCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		_, err := uc.worker.ProcessImage(workerCtx, &pb.ProcessImageRequest{
+			Id:        id.String(),
+			Table:     "menu_topings",
+			ImageData: *image,
+		})
+
+		if err != nil {
+			uc.log.Error(err.Error())
+		}
+	}()
 
 	return mt, nil
 }
@@ -76,7 +95,7 @@ func (uc *Usecase) GetOne(ctx context.Context, id uuid.UUID) (*menutoping.MenuTo
 	return mt, nil
 }
 
-func (uc *Usecase) Update(ctx context.Context, nmt *menutoping.NewMenuTopingsDTO, id uuid.UUID) (*menutoping.MenuTopingsDTO, error) {
+func (uc *Usecase) Update(ctx context.Context, nmt *menutoping.NewMenuTopingsDTO, id uuid.UUID, image *[]byte) (*menutoping.MenuTopingsDTO, error) {
 	mt := &menutoping.MenuTopingsDTO{
 		ID:          id,
 		Name:        nmt.Name,
@@ -89,6 +108,21 @@ func (uc *Usecase) Update(ctx context.Context, nmt *menutoping.NewMenuTopingsDTO
 	if err := uc.menuTopingDBRepo.Update(ctx, mt); err != nil {
 		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
 	}
+
+	go func() {
+		workerCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		_, err := uc.worker.ProcessImage(workerCtx, &pb.ProcessImageRequest{
+			Id:        id.String(),
+			Table:     "menu_topings",
+			ImageData: *image,
+		})
+
+		if err != nil {
+			uc.log.Error(err.Error())
+		}
+	}()
 
 	return mt, nil
 }

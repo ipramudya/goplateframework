@@ -40,7 +40,7 @@ func New(conf *config.Config, log *logger.Log, worker pb.WorkerClient, menuDBRep
 	}
 }
 
-func (uc *Usecase) Create(ctx context.Context, nm *menu.NewMenuDTO, menuImage []byte) (*menu.MenuDTO, error) {
+func (uc *Usecase) Create(ctx context.Context, nm *menu.NewMenuDTO, image *[]byte) (*menu.MenuDTO, error) {
 	now := time.Now()
 
 	id := uuid.New()
@@ -67,7 +67,7 @@ func (uc *Usecase) Create(ctx context.Context, nm *menu.NewMenuDTO, menuImage []
 		_, err := uc.worker.ProcessImage(workerCtx, &pb.ProcessImageRequest{
 			Id:        id.String(),
 			Table:     "menus",
-			ImageData: menuImage,
+			ImageData: *image,
 		})
 
 		if err != nil {
@@ -98,8 +98,8 @@ func (uc *Usecase) GetAll(ctx context.Context, qp *menuweb.QueryParams) (*result
 	return result.New(m, total, qp.Page.Number, qp.Page.Size), nil
 }
 
-func (uc *Usecase) Update(ctx context.Context, nm *menu.NewMenuDTO, id uuid.UUID, menuImage *[]byte) (*menu.MenuDTO, error) {
-	if menuImage != nil {
+func (uc *Usecase) Update(ctx context.Context, nm *menu.NewMenuDTO, id uuid.UUID, image *[]byte) (*menu.MenuDTO, error) {
+	if image != nil {
 		nm.ImageURL = "pending"
 	}
 
@@ -118,7 +118,7 @@ func (uc *Usecase) Update(ctx context.Context, nm *menu.NewMenuDTO, id uuid.UUID
 		return nil, errshttp.New(errshttp.Internal, "Something went wrong")
 	}
 
-	if menuImage != nil {
+	if image != nil {
 		go func() {
 			workerCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
@@ -126,7 +126,7 @@ func (uc *Usecase) Update(ctx context.Context, nm *menu.NewMenuDTO, id uuid.UUID
 			_, err := uc.worker.ProcessImage(workerCtx, &pb.ProcessImageRequest{
 				Id:        id.String(),
 				Table:     "menus",
-				ImageData: *menuImage,
+				ImageData: *image,
 			})
 
 			if err != nil {

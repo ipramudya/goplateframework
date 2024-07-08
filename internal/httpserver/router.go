@@ -61,7 +61,7 @@ func router(w *web.Web, conf *Options) {
 	})
 
 	menuTopingDBRepo := menutopingrepo.NewDB(conf.DB)
-	menuTopingUC := menutopinguc.New(conf.ServConf, conf.Log, menuTopingDBRepo)
+	menuTopingUC := menutopinguc.New(conf.ServConf, conf.Log, menuTopingDBRepo, conf.Worker)
 	menutopingweb.Route(w, &menutopingweb.Options{
 		Log:          conf.Log,
 		MenuTopingUC: menuTopingUC,
